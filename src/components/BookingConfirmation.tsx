@@ -1,16 +1,34 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Check, Download, Calendar, Clock, MapPin, 
-  Share2, Home, CreditCard, Banknote, AlertCircle, ArrowRight
+  Check, Calendar, Clock, CreditCard, AlertCircle, Share2, Home
 } from 'lucide-react';
-import { Button } from './ui/button';
 
-export default function BookingConfirmation() {
+// 1. Define Props Interface (Fixes the App.tsx error)
+interface BookingConfirmationProps {
+  onBackToHome?: () => void; // Optional: If passed from App.tsx, we use it
+}
+
+// 2. Define Location State Interface (For Type Safety)
+interface LocationState {
+  bookingId?: string;
+  providerName?: string;
+  category?: string;
+  date?: string;
+  time?: string;
+  totalAmount?: string | number;
+  paymentStatus?: string;
+  paidAmount?: number;
+  transactionId?: string;
+}
+
+export default function BookingConfirmation({ onBackToHome }: BookingConfirmationProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 1. GET DATA 
+  // 3. GET DATA with Type Safety
+  const state = location.state as LocationState || {};
+  
   const { 
     bookingId = "BKT" + Math.floor(100000 + Math.random() * 900000),
     providerName = "Provider Name",
@@ -18,30 +36,38 @@ export default function BookingConfirmation() {
     date = "Date",
     time = "Time",
     totalAmount = "5000",
-    paymentStatus = "PENDING",
-    paidAmount = 0, // Amount paid online
+    paidAmount = 0,
     transactionId 
-  } = location.state || {};
+  } = state;
 
-  // 2. CALCULATE BALANCE
-  const total = parseFloat(totalAmount);
-  const paid = parseFloat(paidAmount);
+  // 4. CALCULATE BALANCE
+  const total = typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount || 0;
+  const paid = Number(paidAmount) || 0;
   const balance = total - paid;
   
   // Determine Badge Status
   const isFullyPaid = balance <= 0;
 
+  // Handle Home Navigation (Use prop if exists, otherwise internal navigate)
+  const handleHomeClick = () => {
+    if (onBackToHome) {
+      onBackToHome();
+    } else {
+      navigate('/home');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FFFBF0] flex flex-col items-center pb-10">
       
-      {/* 1. Divine Success Header (RESTORED) */}
+      {/* 1. Divine Success Header */}
       <div className="pt-12 pb-6 flex flex-col items-center text-center px-6">
         <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-[0_0_0_8px_rgba(34,197,94,0.2)] mb-4 animate-in zoom-in duration-500">
           <Check className="text-white w-10 h-10" strokeWidth={4} />
         </div>
         
         <h1 className="text-orange-600 font-bold text-xl mb-1 flex items-center gap-2">
-           booking Confirmed!
+           Booking Confirmed!
         </h1>
         <p className="text-gray-500 text-xs italic">
           "May your devotional gathering be blessed with divine grace" 🙏
@@ -59,7 +85,7 @@ export default function BookingConfirmation() {
            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-yellow-400"></div>
            <div className="flex gap-4">
               <img 
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${providerName}`} 
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(providerName)}`} 
                 className="w-14 h-14 rounded-xl bg-orange-50 border border-orange-100"
                 alt="Provider"
               />
@@ -74,7 +100,7 @@ export default function BookingConfirmation() {
            </div>
         </div>
 
-        {/* 3. 💰 PAYMENT SUMMARY (Kept the New Logic) */}
+        {/* 3. 💰 PAYMENT SUMMARY */}
         <div className="bg-white rounded-2xl border border-gray-200 p-0 shadow-sm overflow-hidden">
            <div className="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Payment Breakdown</span>
@@ -129,18 +155,19 @@ export default function BookingConfirmation() {
 
         {/* 4. Action Buttons */}
         <div className="flex gap-3 pt-1">
-           <button className="flex-1 py-3 rounded-xl border border-orange-200 text-orange-600 font-bold hover:bg-orange-50 text-sm flex items-center justify-center gap-2 bg-white shadow-sm">
+           <button 
+           className="flex-1 py-3 rounded-xl border border-orange-200 text-orange-600 font-bold hover:bg-orange-50 text-sm flex items-center justify-center gap-2 bg-white shadow-sm">
              <Share2 size={16} /> Share
            </button>
            <button 
-             onClick={() => navigate('/home')}
+             onClick={handleHomeClick}
              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FF9933] to-[#FFD700] text-white font-bold shadow-md text-sm flex items-center justify-center gap-2 hover:shadow-lg"
            >
              <Home size={16} /> Home
            </button>
         </div>
 
-        {/* 5. ⏳ "What's Next?" Timeline (RESTORED) */}
+        {/* 5. ⏳ "What's Next?" Timeline */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mt-4">
           <h3 className="font-bold text-gray-900 mb-4 text-sm">What's Next?</h3>
           
@@ -177,7 +204,7 @@ export default function BookingConfirmation() {
           </div>
         </div>
 
-        {/* 6. Footer Quote (RESTORED) */}
+        {/* 6. Footer Quote */}
         <div className="text-center pt-4 pb-2 opacity-60">
           <p className="text-gray-500 text-[10px] italic font-medium">
             "Bhakti mein shakti hai" - There is power in devotion 🙏
