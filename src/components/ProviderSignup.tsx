@@ -1,423 +1,248 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowRight, Check, Upload, Mic, Music, Droplet, Lightbulb, Drum, Piano, Users, Camera } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { User, Phone, MapPin, Clock, FileText, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 
 interface ProviderSignupProps {
-  onSignupComplete: (name: string, category: string) => void;
+  onSignupComplete: (user: any) => void;
   onBack: () => void;
 }
 
-const serviceCategories = [
-  {
-    id: 'kirtankar',
-    name: 'Kirtankar',
-    icon: Mic,
-    color: '#FF9933',
-    emoji: '🕉️',
-    description: 'Lead devotional singing sessions',
-  },
-  {
-    id: 'gayak',
-    name: 'Gayak (Singer)',
-    icon: Music,
-    color: '#00AEEF',
-    emoji: '🎤',
-    description: 'Professional spiritual vocalist',
-  },
-  {
-    id: 'achari',
-    name: 'Achari (Pooja Expert)',
-    icon: Droplet,
-    color: '#800000',
-    emoji: '🔱',
-    description: 'Perform traditional poojas',
-  },
-  {
-    id: 'lighting',
-    name: 'Lighting / Mandap',
-    icon: Lightbulb,
-    color: '#FFD700',
-    emoji: '💡',
-    description: 'Event decoration & lighting',
-  },
-  {
-    id: 'mrudung',
-    name: 'Mrudung Vadak',
-    icon: Drum,
-    color: '#A0522D',
-    emoji: '🥁',
-    description: 'Traditional drum player',
-  },
-  {
-    id: 'harmonium',
-    name: 'Harmonium Player',
-    icon: Piano,
-    color: '#008080',
-    emoji: '🎹',
-    description: 'Harmonium accompaniment',
-  },
-  {
-    id: 'bhajani',
-    name: 'Bhajani Mandal',
-    icon: Users,
-    color: '#9932CC',
-    emoji: '👥',
-    description: 'Devotional music group',
-  },
-  {
-    id: 'photographer',
-    name: 'Photographer',
-    icon: Camera,
-    color: '#A9A9A9',
-    emoji: '🎥',
-    description: 'Event photography & videography',
-  },
-];
-
-type Step = 1 | 2 | 3;
-
 export default function ProviderSignup({ onSignupComplete, onBack }: ProviderSignupProps) {
-  const [step, setStep] = useState<Step>(1);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]); 
+  
+  // 🆕 STEP STATE: 1 = Category Selection, 2 = Details Form
+  const [currentStep, setCurrentStep] = useState(1); 
+
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     phone: '',
-    email: '',
-    location: '',
+    password: '',
+    category: '', 
+    categoryColor: '', // Store color for UI themes
     experience: '',
-    cost: '',
+    location: '',
     bio: '',
+    cost: ''
   });
 
-  const selectedCategoryData = serviceCategories.find(cat => cat.id === selectedCategory);
+  // 🔄 1. FETCH CATEGORIES
+  useEffect(() => {
+    fetch('http://localhost:3000/users/categories')
+      .then(res => res.json())
+      .then(data => setCategories(data))
+      .catch(err => console.error("Failed to load categories", err));
+  }, []);
 
-  const handleNext = () => {
-    if (step === 1 && selectedCategory) {
-      setStep(2);
-    } else if (step === 2 && formData.name && formData.phone) {
-      setStep(3);
+  const handleCategorySelect = (category: any) => {
+    setFormData({ 
+      ...formData, 
+      category: category.name,
+      categoryColor: category.color 
+    });
+    // Automatically go to next step after selection
+    setTimeout(() => setCurrentStep(2), 300);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:3000/users/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          role: 'PROVIDER',
+          experience: Number(formData.experience)
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.message || 'Signup failed');
+
+      localStorage.setItem('token', data.access_token);
+      onSignupComplete({ name: formData.fullName, category: formData.category });
+
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleComplete = () => {
-    onSignupComplete(formData.name, selectedCategory);
-  };
+  // 🎨 STEP 1 UI: CATEGORY SELECTION CARDS
+  const renderCategorySelection = () => (
+    <div className="px-6 pb-12">
+      <div className="text-center mb-6 mt-4">
+        <h2 className="text-xl font-bold text-gray-800">Select Your Service Category</h2>
+        <p className="text-gray-500 text-sm">Choose the service you want to provide</p>
+      </div>
 
-  const progressPercentage = (step / 3) * 100;
+      <div className="space-y-4">
+        {categories.map((cat, index) => (
+          <motion.button
+            key={cat.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            onClick={() => handleCategorySelect(cat)}
+            className={`w-full bg-white rounded-2xl p-4 shadow-sm border-2 flex items-center gap-4 text-left transition-all hover:scale-[1.02] active:scale-95 ${
+              formData.category === cat.name 
+                ? 'border-[#FF9933] shadow-md ring-2 ring-[#FF9933]/20' 
+                : 'border-transparent hover:border-gray-200 hover:shadow-md'
+            }`}
+          >
+            {/* Colored Icon Box */}
+            <div 
+              className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner shrink-0"
+              style={{ backgroundColor: cat.color }} // Uses the Admin Color
+            >
+              <span className="text-3xl">{cat.emoji}</span>
+            </div>
+
+            {/* Text Content */}
+            <div className="flex-1">
+              <h3 className="font-bold text-gray-900 text-lg">{cat.name}</h3>
+              <p className="text-gray-500 text-sm leading-tight">
+                {cat.description || `Register as a professional ${cat.name}`}
+              </p>
+            </div>
+
+            {/* Selection Checkmark */}
+            {formData.category === cat.name && (
+              <CheckCircle2 className="text-[#FF9933] w-6 h-6" />
+            )}
+          </motion.button>
+        ))}
+
+        {categories.length === 0 && (
+          <div className="text-center text-gray-400 py-10">
+             <Loader2 className="animate-spin mx-auto mb-2" />
+             Loading Services...
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // 📝 STEP 2 UI: REGISTRATION FORM
+  const renderRegistrationForm = () => (
+    <div className="px-6 pb-12 mt-4">
+      <motion.div 
+        initial={{ x: 20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className="bg-white rounded-2xl shadow-xl p-6 border border-orange-100"
+      >
+        <div className="flex items-center gap-3 mb-6 p-3 bg-orange-50 rounded-xl border border-orange-100">
+          <span className="text-2xl">
+             {categories.find(c => c.name === formData.category)?.emoji || '✨'}
+          </span>
+          <div>
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Selected Role</p>
+            <p className="font-bold text-gray-900">{formData.category}</p>
+          </div>
+          <button 
+             onClick={() => setCurrentStep(1)}
+             className="ml-auto text-xs text-[#FF9933] font-bold underline"
+          >
+            Change
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Full Name</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-3 text-gray-400" size={18} />
+              <Input placeholder="e.g. Santosh Maharaj" className="pl-10" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} required />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Phone Number</Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 text-gray-400" size={18} />
+              <Input placeholder="e.g. 9876543210" className="pl-10" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Password</Label>
+            <Input type="password" placeholder="Create a password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Experience (Yrs)</Label>
+              <div className="relative">
+                 <Clock className="absolute left-3 top-3 text-gray-400" size={18} />
+                 <Input type="number" placeholder="5" className="pl-10" value={formData.experience} onChange={e => setFormData({...formData, experience: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Cost (approx)</Label>
+              <Input placeholder="₹5000" value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>City / Location</Label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
+              <Input placeholder="e.g. Pune" className="pl-10" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>About You</Label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-3 text-gray-400" size={18} />
+              <Textarea placeholder="Tell us about your service..." className="pl-10" value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} />
+            </div>
+          </div>
+
+          <Button type="submit" className="w-full bg-gradient-to-r from-[#FF9933] to-[#FFD700] text-white py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all rounded-xl mt-4" disabled={isLoading}>
+            {isLoading ? <Loader2 className="animate-spin" /> : "Register Account"}
+          </Button>
+        </form>
+      </motion.div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-yellow-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div 
-        className="rounded-b-[2rem] shadow-xl p-6 pb-8"
-        style={{
-          background: selectedCategoryData 
-            ? `linear-gradient(135deg, ${selectedCategoryData.color}, ${selectedCategoryData.color}dd)`
-            : 'linear-gradient(135deg, #FF9933, #FFD700)',
-        }}
-      >
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={step === 1 ? onBack : () => setStep((step - 1) as Step)}
-            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
-          >
-            <ArrowLeft className="text-white" size={20} />
-          </button>
-          <div className="flex-1">
-            <h2 className="text-white">Provider Registration</h2>
-            <p className="text-white/90">Step {step} of 3</p>
-          </div>
+      <div className="bg-gradient-to-r from-[#FF9933] to-[#FFD700] p-6 pb-8 rounded-b-[2rem] shadow-xl sticky top-0 z-10">
+        <div className="flex items-center gap-2 mb-4 text-white">
+           <button onClick={currentStep === 1 ? onBack : () => setCurrentStep(1)}>
+             <ArrowLeft size={24} />
+           </button>
+           <span className="font-medium text-sm opacity-90">
+             {currentStep === 1 ? "Step 1 of 3" : "Step 2 of 3"}
+           </span>
         </div>
-
-        {/* Progress bar */}
-        <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-white"
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercentage}%` }}
-            transition={{ duration: 0.5 }}
-          />
+        <h1 className="text-2xl font-bold text-white">Provider Registration</h1>
+        
+        {/* Progress Bar */}
+        <div className="w-full h-1 bg-white/30 rounded-full mt-4 overflow-hidden">
+           <motion.div 
+             className="h-full bg-white"
+             initial={{ width: "33%" }}
+             animate={{ width: currentStep === 1 ? "33%" : "66%" }}
+           />
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-6">
-        <AnimatePresence mode="wait">
-          {/* Step 1: Category Selection */}
-          {step === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h3 className="text-gray-900 mb-2">Select Your Service Category</h3>
-                <p className="text-gray-600">Choose the service you want to provide</p>
-              </div>
+      {/* RENDER THE CORRECT STEP */}
+      {currentStep === 1 ? renderCategorySelection() : renderRegistrationForm()}
 
-              <div className="grid grid-cols-1 gap-4">
-                {serviceCategories.map((category) => (
-                  <motion.button
-                    key={category.id}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`relative overflow-hidden rounded-2xl p-6 text-left transition-all ${
-                      selectedCategory === category.id
-                        ? 'shadow-2xl scale-105'
-                        : 'shadow-lg hover:shadow-xl'
-                    }`}
-                    style={{
-                      background: selectedCategory === category.id
-                        ? `linear-gradient(135deg, ${category.color}20, ${category.color}10)`
-                        : 'white',
-                      border: `2px solid ${selectedCategory === category.id ? category.color : '#E5E7EB'}`,
-                    }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-md"
-                        style={{ backgroundColor: category.color }}
-                      >
-                        <span className="text-3xl">{category.emoji}</span>
-                      </div>
-                      
-                      <div className="flex-1">
-                        <h4 className="text-gray-900 mb-1">{category.name}</h4>
-                        <p className="text-gray-600">{category.description}</p>
-                      </div>
-
-                      {selectedCategory === category.id && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="w-8 h-8 rounded-full flex items-center justify-center"
-                          style={{ backgroundColor: category.color }}
-                        >
-                          <Check className="text-white" size={20} />
-                        </motion.div>
-                      )}
-                    </div>
-
-                    {/* Orange accent line */}
-                    <div 
-                      className="absolute bottom-0 left-0 right-0 h-1"
-                      style={{
-                        background: selectedCategory === category.id
-                          ? `linear-gradient(90deg, ${category.color}, transparent)`
-                          : 'transparent',
-                      }}
-                    />
-                  </motion.button>
-                ))}
-              </div>
-
-              <Button
-                onClick={handleNext}
-                disabled={!selectedCategory}
-                className="w-full rounded-full h-12 bg-gradient-to-r from-[#FF9933] to-[#FFD700] hover:opacity-90 text-white shadow-lg disabled:opacity-50"
-              >
-                Continue
-                <ArrowRight className="ml-2" size={20} />
-              </Button>
-            </motion.div>
-          )}
-
-          {/* Step 2: Basic Information */}
-          {step === 2 && selectedCategoryData && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <div
-                  className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{ backgroundColor: selectedCategoryData.color }}
-                >
-                  <span className="text-4xl">{selectedCategoryData.emoji}</span>
-                </div>
-                <h3 className="text-gray-900 mb-2">Your Details</h3>
-                <p 
-                  className="px-4 py-2 rounded-full inline-block"
-                  style={{ 
-                    backgroundColor: `${selectedCategoryData.color}20`,
-                    color: selectedCategoryData.color,
-                  }}
-                >
-                  {selectedCategoryData.name}
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4 border-2" style={{ borderColor: `${selectedCategoryData.color}40` }}>
-                <div>
-                  <Label htmlFor="name" className="text-gray-700">Full Name *</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="rounded-xl border-2 border-gray-200 mt-2"
-                    style={{ 
-                      borderColor: formData.name ? selectedCategoryData.color : undefined,
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="phone" className="text-gray-700">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="Enter 10-digit mobile number"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                    className="rounded-xl border-2 border-gray-200 mt-2"
-                    style={{ 
-                      borderColor: formData.phone ? selectedCategoryData.color : undefined,
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="email" className="text-gray-700">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="rounded-xl border-2 border-gray-200 mt-2"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="location" className="text-gray-700">Location</Label>
-                  <Input
-                    id="location"
-                    type="text"
-                    placeholder="City, State"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="rounded-xl border-2 border-gray-200 mt-2"
-                  />
-                </div>
-              </div>
-
-              <Button
-                onClick={handleNext}
-                disabled={!formData.name || !formData.phone}
-                className="w-full rounded-full h-12 text-white shadow-lg disabled:opacity-50"
-                style={{
-                  background: `linear-gradient(135deg, ${selectedCategoryData.color}, ${selectedCategoryData.color}dd)`,
-                }}
-              >
-                Continue
-                <ArrowRight className="ml-2" size={20} />
-              </Button>
-            </motion.div>
-          )}
-
-          {/* Step 3: Professional Details */}
-          {step === 3 && selectedCategoryData && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <div
-                  className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{ backgroundColor: selectedCategoryData.color }}
-                >
-                  <span className="text-4xl">{selectedCategoryData.emoji}</span>
-                </div>
-                <h3 className="text-gray-900 mb-2">Professional Information</h3>
-                <p className="text-gray-600">Tell us about your expertise</p>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4 border-2" style={{ borderColor: `${selectedCategoryData.color}40` }}>
-                <div>
-                  <Label htmlFor="experience" className="text-gray-700">Years of Experience</Label>
-                  <Input
-                    id="experience"
-                    type="number"
-                    placeholder="e.g., 5"
-                    value={formData.experience}
-                    onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                    className="rounded-xl border-2 border-gray-200 mt-2"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="cost" className="text-gray-700">Service Cost Range</Label>
-                  <Input
-                    id="cost"
-                    type="text"
-                    placeholder="e.g., ₹5,000 - ₹8,000"
-                    value={formData.cost}
-                    onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-                    className="rounded-xl border-2 border-gray-200 mt-2"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="bio" className="text-gray-700">About You</Label>
-                  <Textarea
-                    id="bio"
-                    placeholder="Describe your services and experience..."
-                    value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    className="rounded-xl border-2 border-gray-200 mt-2 min-h-[100px]"
-                  />
-                </div>
-
-                <div className="p-4 rounded-xl" style={{ backgroundColor: `${selectedCategoryData.color}10` }}>
-                  <div className="flex items-start gap-3">
-                    <Upload className="flex-shrink-0 mt-1" size={20} style={{ color: selectedCategoryData.color }} />
-                    <div>
-                      <p className="text-gray-900 mb-1">Upload Documents</p>
-                      <p className="text-gray-600">
-                        You can upload verification documents after registration
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-[#FF9933]/10 to-[#FFD700]/10 rounded-2xl p-4 border-2 border-[#FF9933]/20">
-                <div className="flex gap-3">
-                  <div className="w-2 h-2 bg-[#FF9933] rounded-full mt-2 flex-shrink-0" />
-                  <p className="text-gray-700">
-                    Your profile will be reviewed by our team within 24-48 hours before going live
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleComplete}
-                className="w-full rounded-full h-12 text-white shadow-lg"
-                style={{
-                  background: `linear-gradient(135deg, ${selectedCategoryData.color}, ${selectedCategoryData.color}dd)`,
-                }}
-              >
-                Complete Registration
-                <Check className="ml-2" size={20} />
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
     </div>
   );
 }

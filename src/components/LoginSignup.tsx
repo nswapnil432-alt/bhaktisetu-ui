@@ -1,29 +1,74 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Phone, Mail } from 'lucide-react';
+import { motion } from 'motion/react'; 
+import { Phone, Mail, Lock, Loader2, Shield } from 'lucide-react'; 
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
 interface LoginSignupProps {
   onLogin: (name: string, type: 'user' | 'provider') => void;
   onProviderSignup: () => void;
+  onAdminAccess?: () => void;
 }
 
-export default function LoginSignup({ onLogin, onProviderSignup }: LoginSignupProps) {
+export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }: LoginSignupProps) {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [name, setName] = useState('');
-  const [showOTP, setShowOTP] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); 
   const [loginType, setLoginType] = useState<'user' | 'provider'>('user');
 
+  // Backend States
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Step 1: User enters Phone -> We show Password field
   const handlePhoneLogin = () => {
     if (phoneNumber.length === 10) {
-      setShowOTP(true);
+      setShowPassword(true);
+      setError('');
     }
   };
 
-  const handleOTPSubmit = () => {
-    const userName = name || 'Devotee';
-    onLogin(userName, loginType);
+  // Step 2: User submits Password -> We call the API
+  const handleLoginSubmit = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // 🚀 The Real Backend Connection
+      const response = await fetch('http://localhost:3000/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phoneNumber,
+          password: password
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // ✅ SUCCESS
+        localStorage.setItem('token', data.access_token);
+        
+        // 🚨 CRITICAL FIX: Save the User ID so Booking works! 🚨
+        // Ensure your backend sends 'user.id'. If it sends '_id', change this to data.user._id
+        if (data.user && data.user.id) {
+            localStorage.setItem('userId', data.user.id);
+        } else {
+            console.error("Warning: Backend did not return user ID!");
+        }
+
+        onLogin(data.user.fullName, loginType);
+      } else {
+        // ❌ ERROR
+        setError(data.message || 'Login Failed');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Network Error. Is the backend running?');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -31,7 +76,7 @@ export default function LoginSignup({ onLogin, onProviderSignup }: LoginSignupPr
   };
 
   return (
-    <div className="h-screen bg-white flex flex-col relative overflow-hidden">
+    <div className="h-screen bg-white flex flex-col relative overflow-hidden font-sans">
       {/* Decorative background pattern */}
       <div className="absolute inset-0 opacity-5">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -52,6 +97,7 @@ export default function LoginSignup({ onLogin, onProviderSignup }: LoginSignupPr
 
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 z-10">
+
         {/* Logo and welcome */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -62,13 +108,13 @@ export default function LoginSignup({ onLogin, onProviderSignup }: LoginSignupPr
           <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#FF9933] to-[#FFD700] flex items-center justify-center shadow-xl">
             <span className="text-white text-4xl">🕉️</span>
           </div>
-          <h1 className="mb-2 bg-gradient-to-r from-[#FF9933] to-[#FFD700] bg-clip-text text-transparent">
+          <h1 className="mb-2 bg-gradient-to-r from-[#FF9933] to-[#FFD700] bg-clip-text text-transparent text-3xl font-bold">
             Welcome to BhaktiSetu
           </h1>
           <p className="text-gray-600">Connect with Divine Services</p>
         </motion.div>
 
-        {/* Login form */}
+        {/* Login form container */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -79,53 +125,46 @@ export default function LoginSignup({ onLogin, onProviderSignup }: LoginSignupPr
           <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-full">
             <button
               onClick={() => setLoginType('user')}
-              className={`flex-1 py-3 rounded-full transition-all ${
-                loginType === 'user'
+              className={`flex-1 py-3 rounded-full transition-all ${loginType === 'user'
                   ? 'bg-gradient-to-r from-[#FF9933] to-[#FFD700] text-white shadow-lg'
                   : 'text-gray-600 hover:text-gray-900'
-              }`}
+                }`}
             >
               I'm a User
             </button>
             <button
               onClick={() => setLoginType('provider')}
-              className={`flex-1 py-3 rounded-full transition-all ${
-                loginType === 'provider'
+              className={`flex-1 py-3 rounded-full transition-all ${loginType === 'provider'
                   ? 'bg-gradient-to-r from-[#FF9933] to-[#FFD700] text-white shadow-lg'
                   : 'text-gray-600 hover:text-gray-900'
-              }`}
+                }`}
             >
               I'm a Provider
             </button>
           </div>
 
           <div className="bg-white rounded-3xl shadow-2xl p-8 border-2 border-[#FF9933]/20">
-            <h2 className="mb-2 text-center text-gray-800">
+            <h2 className="mb-2 text-center text-gray-800 text-xl font-semibold">
               {loginType === 'user' ? 'Sign In as User' : 'Provider Login'}
             </h2>
             <p className="text-center text-gray-600 mb-6">
-              {loginType === 'user' 
-                ? 'Book devotional services' 
+              {loginType === 'user'
+                ? 'Book devotional services'
                 : 'Manage your services'}
             </p>
 
-            {!showOTP ? (
-              <>
-                {/* Name input */}
-                <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Your Name</label>
-                  <Input
-                    type="text"
-                    placeholder="Enter your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="rounded-full border-2 border-gray-200 focus:border-[#FF9933] transition-colors"
-                  />
-                </div>
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 text-center text-red-500 bg-red-50 p-2 rounded-lg border border-red-100 text-sm">
+                {error}
+              </div>
+            )}
 
-                {/* Phone input */}
+            {!showPassword ? (
+              /* --- STEP 1: PHONE INPUT --- */
+              <>
                 <div className="mb-6">
-                  <label className="block text-gray-700 mb-2">Phone Number</label>
+                  <label className="block text-gray-700 mb-2 font-medium">Phone Number</label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <Input
@@ -133,28 +172,25 @@ export default function LoginSignup({ onLogin, onProviderSignup }: LoginSignupPr
                       placeholder="Enter 10-digit mobile number"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      className="rounded-full pl-12 border-2 border-gray-200 focus:border-[#FF9933] transition-colors"
+                      className="rounded-full pl-12 border-2 border-gray-200 focus:border-[#FF9933] transition-colors h-12"
                     />
                   </div>
                 </div>
 
-                {/* Login button */}
                 <Button
                   onClick={handlePhoneLogin}
                   disabled={phoneNumber.length !== 10}
-                  className="w-full rounded-full h-12 bg-gradient-to-r from-[#FF9933] to-[#FFD700] hover:opacity-90 text-white shadow-lg disabled:opacity-50"
+                  className="w-full rounded-full h-12 bg-gradient-to-r from-[#FF9933] to-[#FFD700] hover:opacity-90 text-white shadow-lg disabled:opacity-50 font-bold tracking-wide"
                 >
-                  Get OTP
+                  Continue
                 </Button>
 
-                {/* Divider */}
                 <div className="flex items-center my-6">
                   <div className="flex-1 h-px bg-gray-200"></div>
                   <span className="px-4 text-gray-500">or</span>
                   <div className="flex-1 h-px bg-gray-200"></div>
                 </div>
 
-                {/* Google login */}
                 <Button
                   onClick={handleGoogleLogin}
                   variant="outline"
@@ -164,57 +200,63 @@ export default function LoginSignup({ onLogin, onProviderSignup }: LoginSignupPr
                   Continue with Google
                 </Button>
 
-                {/* Provider signup link */}
                 {loginType === 'provider' && (
                   <div className="mt-6 text-center">
                     <p className="text-gray-600 mb-2">New service provider?</p>
-                    <button
-                      onClick={onProviderSignup}
-                      className="text-[#FF9933] hover:underline"
-                    >
+                    <button onClick={onProviderSignup} className="text-[#FF9933] hover:underline font-medium">
                       Register as a Provider →
                     </button>
                   </div>
                 )}
               </>
             ) : (
-              <>
-                {/* OTP input */}
+              /* --- STEP 2: PASSWORD INPUT --- */
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
                 <div className="mb-6 text-center">
                   <p className="text-gray-600 mb-4">
-                    Enter OTP sent to +91 {phoneNumber}
+                    Hello, <span className="font-bold text-gray-800">+91 {phoneNumber}</span>
                   </p>
-                  <div className="flex justify-center gap-2 mb-4">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <input
-                        key={i}
-                        type="text"
-                        maxLength={1}
-                        className="w-12 h-12 text-center border-2 border-gray-200 rounded-xl focus:border-[#FF9933] outline-none transition-colors"
-                      />
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => setShowOTP(false)}
-                    className="text-[#FF9933]"
-                  >
-                    Change number
+                  <button onClick={() => setShowPassword(false)} className="text-sm text-[#FF9933] hover:underline">
+                    Change Number?
                   </button>
                 </div>
 
-                {/* Verify button */}
+                <div className="mb-6">
+                  <label className="block text-gray-700 mb-2 font-medium text-left">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <Input
+                      type="password"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="rounded-full pl-12 border-2 border-gray-200 focus:border-[#FF9933] transition-colors h-12"
+                    />
+                  </div>
+                </div>
+
                 <Button
-                  onClick={handleOTPSubmit}
-                  className="w-full rounded-full h-12 bg-gradient-to-r from-[#FF9933] to-[#FFD700] hover:opacity-90 text-white shadow-lg"
+                  onClick={handleLoginSubmit}
+                  disabled={isLoading || !password}
+                  className="w-full rounded-full h-12 bg-gradient-to-r from-[#FF9933] to-[#FFD700] hover:opacity-90 text-white shadow-lg flex items-center justify-center gap-2 font-bold"
                 >
-                  Verify & Continue
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      Verifying...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
                 </Button>
-              </>
+              </motion.div>
             )}
           </div>
 
-          {/* Terms */}
-          <p className="text-center text-gray-500 mt-6 px-4">
+          <p className="text-center text-gray-500 mt-6 px-4 text-xs">
             By continuing, you agree to our Terms of Service and Privacy Policy
           </p>
         </motion.div>
@@ -244,6 +286,20 @@ export default function LoginSignup({ onLogin, onProviderSignup }: LoginSignupPr
           ))}
         </div>
       </motion.div>
+
+      {/* Admin Access Button */}
+      {onAdminAccess && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          onClick={onAdminAccess}
+          className="absolute bottom-24 right-6 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg border-2 border-[#FF9933]/30 hover:bg-[#FF9933]/10 transition-all z-20"
+          title="Admin Access"
+        >
+          <Shield className="w-5 h-5 text-[#FF9933]" />
+        </motion.button>
+      )}
     </div>
   );
 }

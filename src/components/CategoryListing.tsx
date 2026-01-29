@@ -1,137 +1,125 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, Star, MapPin, Calendar } from 'lucide-react';
-import { ServiceProvider } from '../App';
+import { ArrowLeft, Star, MapPin, Calendar, Loader2 } from 'lucide-react';
+// import { Input } from './ui/input'; // Unused, removed for cleanliness
 
 interface CategoryListingProps {
   category: string;
   onBack: () => void;
-  onProviderSelect: (provider: ServiceProvider) => void;
+  onProviderSelect: (provider: any) => void;
 }
 
-const categoryData: Record<string, { name: string; color: string; emoji: string }> = {
-  kirtankar: { name: 'Kirtankar', color: '#FF9933', emoji: '🕉️' },
-  gayak: { name: 'Gayak (Singer)', color: '#00AEEF', emoji: '🎤' },
-  achari: { name: 'Achari (Pooja)', color: '#800000', emoji: '🔱' },
-  lighting: { name: 'Lighting / Mandap', color: '#FFD700', emoji: '💡' },
-  mrudung: { name: 'Mrudung Vadak', color: '#A0522D', emoji: '🥁' },
-  harmonium: { name: 'Harmonium Player', color: '#008080', emoji: '🎹' },
-  bhajani: { name: 'Bhajani Mandal', color: '#9932CC', emoji: '👥' },
-  photographer: { name: 'Photographer', color: '#A9A9A9', emoji: '🎥' },
-};
-
-// Mock provider data
-const getMockProviders = (category: string): ServiceProvider[] => {
-  const categoryInfo = categoryData[category] || categoryData.kirtankar;
-  
-  return [
-    {
-      id: '1',
-      name: 'Pandit Rajesh Sharma',
-      category: categoryInfo.name,
-      rating: 4.9,
-      location: 'Pune, Maharashtra',
-      distance: '2.3 km',
-      avatar: 'https://images.unsplash.com/photo-1575669572405-52da19d6a7db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBraXJ0YW4lMjBzcGlyaXR1YWwlMjBzaW5nZXJ8ZW58MXx8fHwxNzYyMTQ5NDI0fDA&ixlib=rb-4.1.0&q=80&w=1080',
-      bio: 'Experienced professional with 15+ years in devotional performances',
-      experience: 15,
-      cost: '₹5,000 - ₹8,000',
-      availability: 'Available',
-      images: [
-        'https://images.unsplash.com/photo-1575669572405-52da19d6a7db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBraXJ0YW4lMjBzcGlyaXR1YWwlMjBzaW5nZXJ8ZW58MXx8fHwxNzYyMTQ5NDI0fDA&ixlib=rb-4.1.0&q=80&w=1080',
-        'https://images.unsplash.com/photo-1680490958064-14ed3acf3498?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBwb29qYSUyMGNlcmVtb255fGVufDF8fHx8MTc2MjE0OTQyNXww&ixlib=rb-4.1.0&q=80&w=1080',
-      ],
-    },
-    {
-      id: '2',
-      name: 'Guru Anand Kulkarni',
-      category: categoryInfo.name,
-      rating: 4.8,
-      location: 'Mumbai, Maharashtra',
-      distance: '5.7 km',
-      avatar: 'https://images.unsplash.com/photo-1759674888817-8bbea9f89f1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBkZXZvdGlvbmFsJTIwZ2F0aGVyaW5nfGVufDF8fHx8MTc2MjE0OTQyNnww&ixlib=rb-4.1.0&q=80&w=1080',
-      bio: 'Specializing in traditional and contemporary devotional music',
-      experience: 12,
-      cost: '₹4,500 - ₹7,000',
-      availability: 'Available',
-      images: [
-        'https://images.unsplash.com/photo-1759674888817-8bbea9f89f1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBkZXZvdGlvbmFsJTIwZ2F0aGVyaW5nfGVufDF8fHx8MTc2MjE0OTQyNnww&ixlib=rb-4.1.0&q=80&w=1080',
-      ],
-    },
-    {
-      id: '3',
-      name: 'Swami Deepak Patil',
-      category: categoryInfo.name,
-      rating: 4.7,
-      location: 'Nashik, Maharashtra',
-      distance: '8.1 km',
-      avatar: 'https://images.unsplash.com/photo-1612249075164-f5e6a6181364?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBtdXNpY2FsJTIwaW5zdHJ1bWVudHMlMjB0YWJsYXxlbnwxfHx8fDE3NjIxNDk0MjZ8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      bio: 'Passionate about spreading spiritual wisdom through music',
-      experience: 10,
-      cost: '₹3,500 - ₹6,000',
-      availability: 'Booked until Nov 10',
-      images: [
-        'https://images.unsplash.com/photo-1612249075164-f5e6a6181364?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBtdXNpY2FsJTIwaW5zdHJ1bWVudHMlMjB0YWJsYXxlbnwxfHx8fDE3NjIxNDk0MjZ8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      ],
-    },
-    {
-      id: '4',
-      name: 'Pandit Avinash Joshi',
-      category: categoryInfo.name,
-      rating: 5.0,
-      location: 'Pune, Maharashtra',
-      distance: '3.4 km',
-      avatar: 'https://images.unsplash.com/photo-1747041807605-87a31a4b41e0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW5kYXAlMjBkZWNvcmF0aW9uJTIwd2VkZGluZ3xlbnwxfHx8fDE3NjIxNDk0MjV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      bio: 'Award-winning performer known for soulful renditions',
-      experience: 20,
-      cost: '₹8,000 - ₹12,000',
-      availability: 'Available',
-      images: [
-        'https://images.unsplash.com/photo-1747041807605-87a31a4b41e0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW5kYXAlMjBkZWNvcmF0aW9uJTIwd2VkZGluZ3xlbnwxfHx8fDE3NjIxNDk0MjV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      ],
-    },
-  ];
-};
-
 export default function CategoryListing({ category, onBack, onProviderSelect }: CategoryListingProps) {
-  const categoryInfo = categoryData[category] || categoryData.kirtankar;
-  const providers = getMockProviders(category);
+  const [providers, setProviders] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // 🎨 Theme State
+  const [themeColor, setThemeColor] = useState('#FF9933');
+  const [categoryEmoji, setCategoryEmoji] = useState('🕉️');
+
+  useEffect(() => {
+    setIsLoading(true);
+
+    // 1. Fetch Categories (For Styling)
+    fetch('http://localhost:3000/users/categories')
+      .then(res => res.json())
+      .then(cats => {
+        const cleanName = category.replace(/s$/, "").toLowerCase();
+        const matchedCat = cats.find((c: any) => c.name.toLowerCase().includes(cleanName));
+        if (matchedCat) {
+          setThemeColor(matchedCat.color || '#FF9933');
+          setCategoryEmoji(matchedCat.emoji || '🕉️');
+        }
+      })
+      .catch(err => console.error("Category styling fetch error", err));
+
+    // 2. Fetch Providers
+    // 🛑 Optimization: Ideally use /profiles/search?category=... but this works for now
+    fetch('http://localhost:3000/users') 
+      .then(res => res.json())
+      .then(data => {
+        // A. Filter only Providers of this Category
+        const filtered = data.filter((user: any) => {
+          if (user.role !== 'PROVIDER') return false;
+          
+          // Safety Check: Does profile exist?
+          if (!user.providerProfile) return false;
+
+          const userCat = user.category || user.providerProfile.category?.name || "";
+          const dbCategory = userCat.toLowerCase().replace(/s$/, "");
+          const selectedCategory = category.toLowerCase().replace(/s$/, "");
+
+          return dbCategory.includes(selectedCategory) || selectedCategory.includes(dbCategory);
+        });
+
+        // B. 🚨 CRITICAL FIX: Map the ID correctly!
+        // We must use providerProfile.id for bookings, NOT user.id
+        const mappedProviders = filtered.map((user: any) => ({
+          ...user,
+          id: user.providerProfile.id, // 👈 THIS FIXES THE "NO RECORD FOUND" ERROR
+          userId: user.id, // Keep original user ID just in case
+          // Flatten useful profile data for easier display
+          experience: user.providerProfile.experience,
+          location: user.providerProfile.city || user.location,
+          basePrice: user.providerProfile.basePrice,
+          rating: 4.8 // Mock rating if DB doesn't have it yet
+        }));
+
+        console.log(`✅ Loaded ${mappedProviders.length} providers for ${category}`);
+        setProviders(mappedProviders);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load providers", err);
+        setIsLoading(false);
+      });
+  }, [category]);
+
+  // Client Filter (Search)
+  const displayedProviders = providers.filter(p => {
+    const name = p.fullName || "";
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-yellow-50">
-      {/* Header */}
+
+      {/* 🎨 DYNAMIC COLORED HEADER */}
       <div
-        className="rounded-b-[2rem] shadow-xl p-6 pb-8"
-        style={{
-          background: `linear-gradient(135deg, ${categoryInfo.color}, ${categoryInfo.color}dd)`,
-        }}
+        className="pt-6 pb-12 px-6 rounded-b-[2.5rem] shadow-lg relative overflow-hidden transition-colors duration-500"
+        style={{ backgroundColor: themeColor }}
       >
-        <div className="flex items-center gap-4 mb-4">
+        {/* Background Patterns */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+
+        <div className="flex items-center gap-3 mb-6 relative z-10">
           <button
             onClick={onBack}
-            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all"
           >
-            <ArrowLeft className="text-white" size={20} />
+            <ArrowLeft size={20} />
           </button>
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-3xl">{categoryInfo.emoji}</span>
-              <h2 className="text-white">{categoryInfo.name}</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{categoryEmoji}</span>
+              <h1 className="text-2xl font-bold text-white capitalize">
+                {category.endsWith('s') ? category : `${category}s`}
+              </h1>
             </div>
-            <p className="text-white/90">{providers.length} Professionals Available</p>
+            <p className="text-white/90 text-sm font-medium ml-1">
+              {providers.length} Professionals Available
+            </p>
           </div>
         </div>
 
-        {/* Filter chips */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {['All', 'Nearby', 'Top Rated', 'Available Today'].map((filter) => (
+        {/* Filter Chips */}
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {['All', 'Nearby', 'Top Rated', 'Available'].map((filter, i) => (
             <button
               key={filter}
-              className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
-                filter === 'All'
-                  ? 'bg-white text-gray-800'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${i === 0 ? 'bg-white text-gray-800 shadow-md' : 'bg-white/20 text-white hover:bg-white/30'}`}
             >
               {filter}
             </button>
@@ -139,107 +127,94 @@ export default function CategoryListing({ category, onBack, onProviderSelect }: 
         </div>
       </div>
 
-      {/* Providers list */}
-      <div className="p-4 space-y-4">
-        {providers.map((provider, index) => (
-          <motion.button
-            key={provider.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => onProviderSelect(provider)}
-            className="w-full text-left"
-          >
-            <div
-              className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              style={{
-                border: `2px solid ${categoryInfo.color}20`,
+      {/* 📋 PROVIDER LIST */}
+      <div className="p-4 space-y-4 px-5 pt-6 pb-8 -mt-6 relative z-10 flex flex-col gap-5">
+
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl shadow-sm">
+            <Loader2 className="animate-spin mb-2" style={{ color: themeColor }} size={32} />
+            <p className="text-gray-400 text-sm">Finding Best {category}s...</p>
+          </div>
+        ) : displayedProviders.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-3xl shadow-sm border border-dashed border-gray-200">
+            <p className="text-gray-400">No providers found for {category}.</p>
+            <p className="text-xs text-orange-400 mt-2">Try adding one in Admin Panel</p>
+          </div>
+        ) : (
+          displayedProviders.map((provider, index) => (
+            <motion.div
+              key={provider.id} // This is now the Profile ID
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ 
+                y: -6, 
+                scale: 1.02,
+                boxShadow: `0 10px 25px -5px ${themeColor}40`
               }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onProviderSelect(provider)}
+              className="w-full text-left bg-white rounded-2xl p-4 shadow-md border border-gray-100 cursor-pointer transition-all duration-300 relative overflow-hidden"
+              style={{ borderBottom: `4px solid ${themeColor}` }}
             >
-              <div className="flex gap-4 p-4">
-                {/* Avatar */}
-                <div className="relative flex-shrink-0">
-                  <div
-                    className="w-20 h-20 rounded-2xl overflow-hidden"
-                    style={{
-                      border: `3px solid ${categoryInfo.color}`,
-                    }}
-                  >
+              <div className="flex gap-4 p-4 pb-2">
+                {/* 🖼️ Avatar */}
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 rounded-xl overflow-hidden shadow-sm bg-gray-100">
                     <img
-                      src={provider.avatar}
-                      alt={provider.name}
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${provider.fullName}`}
+                      alt={provider.fullName}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  {provider.availability === 'Available' && (
-                    <div
-                      className="absolute -top-1 -right-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center"
-                      style={{ backgroundColor: '#10B981' }}
-                    >
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  )}
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
                 </div>
 
-                {/* Info */}
+                {/* 📝 Info */}
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-gray-900 mb-1 truncate">{provider.name}</h4>
-                  
-                  {/* Rating */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex items-center gap-1">
-                      <Star className="text-yellow-400 fill-yellow-400" size={16} />
-                      <span className="text-gray-900">{provider.rating}</span>
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-gray-900 mb-1 truncate font-bold text-lg">{provider.fullName}</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                      <span className="text-sm font-bold text-gray-700">{provider.rating}</span>
                     </div>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-600">{provider.experience} yrs exp</span>
                   </div>
 
-                  {/* Location */}
-                  <div className="flex items-center gap-1 text-gray-600 mb-2">
-                    <MapPin size={14} />
-                    <span className="truncate">{provider.location}</span>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-600">{provider.distance}</span>
+                  <div className="flex items-center gap-2 text-gray-500 text-sm mt-0.5">
+                    <span className="font-medium">{provider.experience || 0} yrs exp</span>
+                    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                    <span className="truncate max-w-[100px]">{provider.location || 'Pune, MH'}</span>
                   </div>
 
-                  {/* Availability and cost */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={14} className="text-gray-400" />
-                      <span
-                        className={`${
-                          provider.availability === 'Available'
-                            ? 'text-green-600'
-                            : 'text-orange-600'
-                        }`}
-                      >
-                        {provider.availability}
-                      </span>
-                    </div>
-                    <span
-                      className="px-3 py-1 rounded-full"
-                      style={{
-                        backgroundColor: `${categoryInfo.color}15`,
-                        color: categoryInfo.color,
-                      }}
-                    >
-                      {provider.cost}
-                    </span>
+                  <div className="flex items-center gap-1 text-gray-400 text-xs mt-1">
+                    <MapPin size={12} />
+                    <span>{provider.location || "Maharashtra"} • 2.3 km</span>
                   </div>
                 </div>
               </div>
 
-              {/* Bottom badge */}
-              <div
-                className="h-1"
-                style={{
-                  background: `linear-gradient(90deg, ${categoryInfo.color}, transparent)`,
-                }}
-              ></div>
-            </div>
-          </motion.button>
-        ))}
+              {/* 💰 Price & Avail */}
+              <div className="mt-2 px-4 pb-2 pt-3 border-t border-gray-50 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg">
+                  <Calendar size={14} />
+                  <span className="text-xs font-bold">Available Today</span>
+                </div>
+
+                <div
+                  className="px-4 py-1.5 rounded-full font-bold text-sm shadow-sm"
+                  style={{
+                    backgroundColor: `${themeColor}15`,
+                    color: themeColor,
+                  }}
+                >
+                  {provider.basePrice
+                    ? `₹${provider.basePrice} / event`
+                    : '₹Contact'}
+                </div>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );
