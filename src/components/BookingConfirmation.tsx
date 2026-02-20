@@ -67,8 +67,11 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
         </div>
         
         <h1 className="text-orange-600 font-bold text-xl mb-1 flex items-center gap-2">
-           Booking Confirmed!
+           Request Sent to Maharaj Ji!
         </h1>
+        <p className="text-gray-500 text-xs italic">
+           Please wait for approval. You will be notified soon.
+        </p>
         <p className="text-gray-500 text-xs italic">
           "May your devotional gathering be blessed with divine grace" 🙏
         </p>

@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { ArrowLeft, User, Calendar, Heart, Settings, LogOut, Moon, Sun, Bell, Lock, HelpCircle, Star } from 'lucide-react';
-import { Button } from './ui/button';
-import { Switch } from './ui/switch';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, User, Calendar, Settings, LogOut, ChevronRight, Phone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProfileProps {
   userName: string;
@@ -10,249 +8,95 @@ interface UserProfileProps {
 }
 
 export default function UserProfile({ userName, onBack }: UserProfileProps) {
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(true);
+  const navigate = useNavigate();
+  const [phone, setPhone] = useState("");
 
-  const bookingHistory = [
-    {
-      id: 'BKT12345678',
-      service: 'Kirtankar + Harmonium Player',
-      date: 'Oct 15, 2025',
-      status: 'Completed',
-      rating: 5,
-    },
-    {
-      id: 'BKT12345679',
-      service: 'Bhajani Mandal',
-      date: 'Sept 28, 2025',
-      status: 'Completed',
-      rating: 4,
-    },
-    {
-      id: 'BKT12345680',
-      service: 'Achari (Pooja)',
-      date: 'Nov 10, 2025',
-      status: 'Upcoming',
-      rating: 0,
-    },
-  ];
+  // 🚀 LOAD REAL PHONE NUMBER
+  useEffect(() => {
+    const savedPhone = localStorage.getItem('userPhone');
+    setPhone(savedPhone || "+91 XXXXX XXXXX"); // Fallback if missing
+  }, []);
+
+  // Logout Logic
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/login');
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-yellow-50 pb-8">
+    <div className="min-h-screen bg-gray-50">
+      
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#FF9933] to-[#FFD700] rounded-b-[2rem] shadow-xl p-6 pb-12">
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={onBack}
-            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
-          >
-            <ArrowLeft className="text-white" size={20} />
-          </button>
-          <h2 className="text-white">My Profile</h2>
-        </div>
-
-        {/* Profile info */}
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/40">
-            <User className="text-white" size={32} />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-white mb-1">{userName}</h3>
-            <p className="text-white/90">Devotee since 2023</p>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full">
-                <span className="text-white">3 Events Organized</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="bg-white p-4 flex items-center gap-3 shadow-sm sticky top-0 z-10">
+        <button onClick={onBack} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+          <ArrowLeft size={20} className="text-gray-700" />
+        </button>
+        <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* Stats cards */}
-        <div className="grid grid-cols-3 gap-3">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center border-2 border-[#FF9933]/40"
-          >
-            <div className="w-10 h-10 bg-[#FF9933]/20 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Calendar className="text-[#FF9933]" size={20} />
-            </div>
-            <p className="text-gray-900">3</p>
-            <p className="text-gray-600">Events</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center border-2 border-[#FF9933]/40"
-          >
-            <div className="w-10 h-10 bg-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Heart className="text-pink-500" size={20} />
-            </div>
-            <p className="text-gray-900">5</p>
-            <p className="text-gray-600">Favorites</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center border-2 border-[#FF9933]/40"
-          >
-            <div className="w-10 h-10 bg-yellow-400/20 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Star className="text-yellow-400" size={20} />
-            </div>
-            <p className="text-gray-900">4.8</p>
-            <p className="text-gray-600">Rating</p>
-          </motion.div>
+      <div className="p-5 space-y-6">
+        
+        {/* 👤 Profile Card */}
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+          <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-3 border-4 border-white shadow-md">
+            <User size={40} className="text-orange-500" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">{userName }</h2>
+          
+          {/* ✅ REAL PHONE NUMBER DISPLAYED HERE */}
+          <p className="text-sm text-gray-500 font-medium">{phone}</p>
         </div>
 
-        {/* Booking history */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl shadow-lg p-6"
-        >
-          <h3 className="text-gray-900 mb-4">Recent Bookings</h3>
-          <div className="space-y-3">
-            {bookingHistory.map((booking, index) => (
-              <div
-                key={booking.id}
-                className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-4 border border-orange-100"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h4 className="text-gray-900 mb-1">{booking.service}</h4>
-                    <p className="text-gray-600">{booking.date}</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full ${
-                      booking.status === 'Completed'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}
-                  >
-                    {booking.status}
-                  </span>
-                </div>
-                
-                {booking.status === 'Completed' && booking.rating > 0 && (
-                  <div className="flex items-center gap-1 mt-2">
-                    {[...Array(booking.rating)].map((_, i) => (
-                      <Star key={i} className="text-yellow-400 fill-yellow-400" size={14} />
-                    ))}
-                  </div>
-                )}
-                
-                <p className="text-gray-500 mt-2">ID: {booking.id}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        {/* 📋 Menu Options */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">Menu</h3>
 
-        {/* Settings */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white rounded-2xl shadow-lg p-6"
-        >
-          <h3 className="text-gray-900 mb-4">Settings</h3>
-          
-          <div className="space-y-4">
-            {/* Dark mode */}
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                {darkMode ? (
-                  <Moon className="text-gray-600" size={20} />
-                ) : (
-                  <Sun className="text-gray-600" size={20} />
-                )}
-                <div>
-                  <p className="text-gray-900">Dark Mode</p>
-                  <p className="text-gray-600">Adjust app theme</p>
-                </div>
-              </div>
-              <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-            </div>
-
-            {/* Notifications */}
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <Bell className="text-gray-600" size={20} />
-                <div>
-                  <p className="text-gray-900">Notifications</p>
-                  <p className="text-gray-600">Event updates & reminders</p>
-                </div>
-              </div>
-              <Switch checked={notifications} onCheckedChange={setNotifications} />
-            </div>
-
-            {/* Account settings */}
-            <button className="flex items-center justify-between w-full py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors rounded-lg">
-              <div className="flex items-center gap-3">
-                <Settings className="text-gray-600" size={20} />
-                <div className="text-left">
-                  <p className="text-gray-900">Account Settings</p>
-                  <p className="text-gray-600">Manage your account</p>
-                </div>
-              </div>
-            </button>
-
-            {/* Privacy */}
-            <button className="flex items-center justify-between w-full py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors rounded-lg">
-              <div className="flex items-center gap-3">
-                <Lock className="text-gray-600" size={20} />
-                <div className="text-left">
-                  <p className="text-gray-900">Privacy & Security</p>
-                  <p className="text-gray-600">Control your privacy</p>
-                </div>
-              </div>
-            </button>
-
-            {/* Help */}
-            <button className="flex items-center justify-between w-full py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors rounded-lg">
-              <div className="flex items-center gap-3">
-                <HelpCircle className="text-gray-600" size={20} />
-                <div className="text-left">
-                  <p className="text-gray-900">Help & Support</p>
-                  <p className="text-gray-600">Get assistance</p>
-                </div>
-              </div>
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Logout button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Button
-            variant="outline"
-            className="w-full rounded-full h-12 border-2 border-red-500 text-red-500 hover:bg-red-50"
+          {/* MY BOOKINGS */}
+          <button 
+            onClick={() => navigate('/my-bookings')} 
+            className="w-full bg-white p-4 rounded-2xl flex items-center justify-between shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-95"
           >
-            <LogOut className="mr-2" size={20} />
-            Logout
-          </Button>
-        </motion.div>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                <Calendar size={20} />
+              </div>
+              <span className="font-bold text-gray-700">My Seva Bookings</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-300" />
+          </button>
 
-        {/* App info */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="text-center text-gray-500"
+          {/* Help & Support */}
+          <button className="w-full bg-white p-4 rounded-2xl flex items-center justify-between shadow-sm border border-gray-100 hover:shadow-md transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                <Phone size={20} />
+              </div>
+              <span className="font-bold text-gray-700">Help & Support</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-300" />
+          </button>
+
+          {/* Settings */}
+          <button className="w-full bg-white p-4 rounded-2xl flex items-center justify-between shadow-sm border border-gray-100 hover:shadow-md transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-600">
+                <Settings size={20} />
+              </div>
+              <span className="font-bold text-gray-700">Settings</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-300" />
+          </button>
+        </div>
+
+        {/* 🚪 Logout Button */}
+        <button 
+          onClick={handleLogout}
+          className="w-full mt-4 p-4 rounded-2xl flex items-center justify-center gap-2 text-red-500 font-bold bg-red-50 hover:bg-red-100 transition-colors"
         >
-          <p>BhaktiSetu v1.0.0</p>
-          <p className="mt-1">Made with devotion 🙏</p>
-        </motion.div>
+          <LogOut size={20} />
+          Logout
+        </button>
+
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Search, Bell, User, Sparkles, Loader2, ImageOff } from 'lucide-react'; // Added ImageOff
+import { motion } from 'framer-motion'; // 👈 Fixed import (changed from motion/react)
+import { Search, User, Sparkles, Loader2, ImageOff } from 'lucide-react'; 
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import NotificationBell from './NotificationBell';
 
 interface HomeScreenProps {
   userName: string;
@@ -17,8 +18,7 @@ export default function HomeScreen({
   onCategorySelect,
   onPlanEvent,
   onProfileClick,
-  onNotificationsClick,
-}: HomeScreenProps) {
+}: HomeScreenProps) { // Removed onNotificationsClick from props since the Bell handles it now
   
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,7 +28,6 @@ export default function HomeScreen({
     fetch('http://localhost:3000/users/categories')
       .then(res => res.json())
       .then(data => {
-        console.log("🔥 Backend Categories Data:", data); // Check Console!
         if (Array.isArray(data)) {
           setCategories(data);
         } else {
@@ -45,21 +44,36 @@ export default function HomeScreen({
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-white pb-24">
       
-      {/* Header */}
+      {/* 🟢 FIXED HEADER */}
       <div className="bg-gradient-to-r from-[#FF9933] to-[#FFD700] rounded-b-[2rem] shadow-xl p-6 pb-8">
         <div className="flex justify-between items-center mb-6">
+          
+          {/* Greeting Section */}
           <div>
             <p className="text-white/90">Namaskar 🙏</p>
-            <h2 className="text-white font-bold text-2xl">{userName || 'Devotee'}</h2>
+            <h2 className="text-white font-bold text-2xl">{userName}</h2>
           </div>
-          <div className="flex gap-3">
-            <button onClick={onNotificationsClick} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/30 transition-colors relative">
-              <Bell className="text-white" size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-            </button>
-            <button onClick={onProfileClick} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+          
+          {/* Action Buttons Section */}
+          <div className="flex items-center gap-4"> {/* Increased gap for better spacing */}
+            
+            {/* 🔔 The Clean Notification Bell */}
+            {/* Removed the extra <button> wrapper and the Hello User text */}
+            <div className="text-white"> 
+               {/* Wrapped in a div with text-white so the Bell icon inherits the color if needed, 
+                   though we styled the Bell icon as gray-700 inside its own component. 
+                   If you want it white, update the Bell icon color inside NotificationBell.tsx */}
+               <NotificationBell />
+            </div>
+
+            {/* Profile Button */}
+            <button 
+              onClick={onProfileClick} 
+              className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/30 transition-colors shadow-sm"
+            >
               <User className="text-white" size={20} />
             </button>
+            
           </div>
         </div>
 
@@ -102,7 +116,6 @@ export default function HomeScreen({
         {isLoading ? (
            <div className="flex justify-center p-10"><Loader2 className="animate-spin text-orange-500" /></div>
         ) : categories.length === 0 ? (
-           // Empty State
            <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
              <ImageOff className="w-10 h-10 text-gray-300 mx-auto mb-2" />
              <p className="text-gray-500">No categories found.</p>
@@ -111,7 +124,6 @@ export default function HomeScreen({
         ) : (
           <div className="grid grid-cols-2 gap-4">
             {categories.map((category, index) => {
-              // 🛡️ Safe Colors: Fallback if color is missing
               const safeColor = category.color || "#FF9933"; 
               
               return (
@@ -126,18 +138,15 @@ export default function HomeScreen({
                   <div
                     className="rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col items-center text-center justify-between bg-white"
                     style={{
-                      // Use inline style for dynamic background tint
                       background: `linear-gradient(135deg, ${safeColor}15, ${safeColor}05)`,
                       border: `1px solid ${safeColor}20`,
                     }}
                   >
                     <div className="flex flex-col items-center w-full">
-                      {/* 🖼️ ICON / EMOJI HANDLING */}
                       <div
                         className="w-14 h-14 rounded-full flex items-center justify-center mb-3 shadow-md overflow-hidden"
                         style={{ backgroundColor: safeColor }}
                       >
-                         {/* Logic: Show Image if available, otherwise Emoji, otherwise Default */}
                          {category.icon || category.imageUrl ? (
                             <img 
                               src={category.icon || category.imageUrl} 

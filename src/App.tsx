@@ -8,18 +8,19 @@ import OnboardingScreens from "./components/OnboardingScreens";
 import LoginSignup from "./components/LoginSignup";
 import ProviderSignup from "./components/ProviderSignup";
 import ProviderDashboard from "./components/ProviderDashboard";
-import HomeScreen from "./components/HomeScreen"; // Using the original Home with Categories
+import HomeScreen from "./components/HomeScreen"; 
 import CategoryListing from "./components/CategoryListing";
 import ProviderDetails from "./components/ProviderDetails";
 import EventPlanner from "./components/EventPlanner"; 
 import BookingConfirmation from "./components/BookingConfirmation";
 import UserProfile from "./components/UserProfile";
-import NotificationsChat from "./components/NotificationsChat";
 import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
 import PaymentScreen from "./components/PaymentScreen";
 import OnlinePaymentGateway from "./components/OnlinePaymentGateway";
-
+import MyBookings from "./components/MyBookings";
+import NotificationToast from "./components/NotificationToast"; // ✅ Imported
+ 
 export type UserType = "user" | "provider";
 
 export interface ServiceProvider {
@@ -89,7 +90,12 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white relative"> {/* Added relative for positioning */}
+      
+      {/* 🔔 GLOBAL NOTIFICATION TOAST */}
+      {/* This sits outside Routes so it works on EVERY page */}
+      <NotificationToast />
+
       <Routes>
         {/* 1. Splash Screen (Root) */}
         <Route path="/" element={<SplashScreen />} />
@@ -186,13 +192,11 @@ function App() {
           )
         } />
 
-        {/* 🚀 6. NEW: Event Planner Page */}
-        {/* Fixed the comment syntax error here */}
         <Route path="/plan-event" element={<EventPlanner />} />
 
         <Route path="/payment" element={<PaymentScreen />} />
         <Route path="/online-gateway" element={<OnlinePaymentGateway />} />
-        
+        <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/confirmation" element={
           <BookingConfirmation
             onBackToHome={() => navigate('/home')}
@@ -207,9 +211,7 @@ function App() {
           />
         } />
 
-        <Route path="/chat" element={
-          <NotificationsChat onBack={() => navigate('/home')} />
-        } />
+        
 
       </Routes>
     </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react'; 
+import { motion } from 'framer-motion'; 
 import { Phone, Mail, Lock, Loader2, Shield } from 'lucide-react'; 
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -16,11 +16,9 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
   const [showPassword, setShowPassword] = useState(false); 
   const [loginType, setLoginType] = useState<'user' | 'provider'>('user');
 
-  // Backend States
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Step 1: User enters Phone -> We show Password field
   const handlePhoneLogin = () => {
     if (phoneNumber.length === 10) {
       setShowPassword(true);
@@ -28,13 +26,11 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
     }
   };
 
-  // Step 2: User submits Password -> We call the API
   const handleLoginSubmit = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      // 🚀 The Real Backend Connection
       const response = await fetch('http://localhost:3000/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,15 +46,40 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
         // ✅ SUCCESS
         localStorage.setItem('token', data.access_token);
         
-        // 🚨 CRITICAL FIX: Save the User ID so Booking works! 🚨
-        // Ensure your backend sends 'user.id'. If it sends '_id', change this to data.user._id
+        // 1. Save Base User ID
         if (data.user && data.user.id) {
             localStorage.setItem('userId', data.user.id);
-        } else {
-            console.error("Warning: Backend did not return user ID!");
+            localStorage.setItem('userName', data.user.fullName || 'User');
         }
 
-        onLogin(data.user.fullName, loginType);
+        // 🚀 2. THE FIX: The Smart Provider ID Hunter
+        // We check every possible way your backend might send the Provider Profile
+        if (loginType === 'provider') {
+            let foundProviderId = null;
+
+            if (data.user?.providerProfile?.id) {
+                foundProviderId = data.user.providerProfile.id; 
+            } else if (data.user?.provider?.id) {
+                foundProviderId = data.user.provider.id; 
+            } else if (data.providerProfile?.id) {
+                foundProviderId = data.providerProfile.id;
+            } else if (data.providerId) {
+                foundProviderId = data.providerId;
+            }
+
+            if (foundProviderId) {
+                localStorage.setItem('providerId', foundProviderId);
+            } else {
+                // If this triggers, your backend is NOT sending the provider ID during login!
+                console.error("🚨 CRITICAL: Logged in as Provider, but Backend didn't send a Provider ID! Full response:", data);
+            }
+        }
+
+        // 3. Save Phone Number
+        localStorage.setItem('userPhone', data.user?.phone || phoneNumber); 
+
+        // Trigger App Navigation
+        onLogin(data.user?.fullName || 'User', loginType);
       } else {
         // ❌ ERROR
         setError(data.message || 'Login Failed');
@@ -77,7 +98,6 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
 
   return (
     <div className="h-screen bg-white flex flex-col relative overflow-hidden font-sans">
-      {/* Decorative background pattern */}
       <div className="absolute inset-0 opacity-5">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -91,14 +111,11 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
         </svg>
       </div>
 
-      {/* Saffron border decoration */}
       <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#FF9933] via-[#FFD700] to-[#FF9933]"></div>
       <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-[#FF9933] via-[#FFD700] to-[#FF9933]"></div>
 
-      {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 z-10">
 
-        {/* Logo and welcome */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -114,14 +131,12 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
           <p className="text-gray-600">Connect with Divine Services</p>
         </motion.div>
 
-        {/* Login form container */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
           className="w-full max-w-md"
         >
-          {/* User type toggle */}
           <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-full">
             <button
               onClick={() => setLoginType('user')}
@@ -153,7 +168,6 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
                 : 'Manage your services'}
             </p>
 
-            {/* Error Message */}
             {error && (
               <div className="mb-4 text-center text-red-500 bg-red-50 p-2 rounded-lg border border-red-100 text-sm">
                 {error}
@@ -161,7 +175,6 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
             )}
 
             {!showPassword ? (
-              /* --- STEP 1: PHONE INPUT --- */
               <>
                 <div className="mb-6">
                   <label className="block text-gray-700 mb-2 font-medium">Phone Number</label>
@@ -210,7 +223,6 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
                 )}
               </>
             ) : (
-              /* --- STEP 2: PASSWORD INPUT --- */
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -262,7 +274,6 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
         </motion.div>
       </div>
 
-      {/* Bottom diya decoration */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -287,7 +298,6 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
         </div>
       </motion.div>
 
-      {/* Admin Access Button */}
       {onAdminAccess && (
         <motion.button
           initial={{ opacity: 0 }}
