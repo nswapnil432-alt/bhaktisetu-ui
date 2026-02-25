@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion'; 
-import { Phone, Mail, Lock, Loader2, Shield } from 'lucide-react'; 
+import { Phone, Mail, Lock, Loader2 } from 'lucide-react'; 
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
 interface LoginSignupProps {
-  onLogin: (name: string, type: 'user' | 'provider') => void;
+   onLogin: (name: string, type: 'user' | 'provider' | 'admin') => void;
   onProviderSignup: () => void;
-  onAdminAccess?: () => void;
+   onUserSignup: () => void; 
 }
 
-export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }: LoginSignupProps) {
+export default function LoginSignup({ onLogin, onProviderSignup, onUserSignup }: LoginSignupProps) {
+  const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false); 
@@ -41,20 +43,37 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
       });
 
       const data = await response.json();
-
+console.log(" login responce:", data);5
       if (response.ok) {
         // ✅ SUCCESS
         localStorage.setItem('token', data.access_token);
         
-        // 1. Save Base User ID
+        // 1. Save Base User ID & Role
+        if (data.user && data.user.id) {
+           // 1. The Super Net: Catch the name from wherever it is!
+        const foundName = data.user?.fullName || data.user?.name || data.fullName || data.name || 'Devotee';
+
+        // 2. Save Base User ID & Role
         if (data.user && data.user.id) {
             localStorage.setItem('userId', data.user.id);
-            localStorage.setItem('userName', data.user.fullName || 'User');
+            localStorage.setItem('userName', foundName);
+            localStorage.setItem('userRole', data.user.role || 'USER'); 
         }
 
-        // 🚀 2. THE FIX: The Smart Provider ID Hunter
-        // We check every possible way your backend might send the Provider Profile
-        if (loginType === 'provider') {
+        // ... (keep the provider ID hunter code the same) ...
+
+        // 🚨 4. THE TRAFFIC COP (Role-Based Routing) 🚨
+        const userRole = data.user?.role;
+        
+        if (userRole === 'ADMIN') {
+           onLogin(foundName, 'admin');
+        } else {
+           onLogin(foundName, loginType);
+        }
+        }
+
+        // 2. THE FIX: The Smart Provider ID Hunter
+        if (loginType === 'provider' && data.user?.role !== 'ADMIN') {
             let foundProviderId = null;
 
             if (data.user?.providerProfile?.id) {
@@ -70,16 +89,24 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
             if (foundProviderId) {
                 localStorage.setItem('providerId', foundProviderId);
             } else {
-                // If this triggers, your backend is NOT sending the provider ID during login!
-                console.error("🚨 CRITICAL: Logged in as Provider, but Backend didn't send a Provider ID! Full response:", data);
+                console.error("🚨 CRITICAL: Logged in as Provider, but Backend didn't send a Provider ID!");
             }
         }
 
         // 3. Save Phone Number
         localStorage.setItem('userPhone', data.user?.phone || phoneNumber); 
 
-        // Trigger App Navigation
-        onLogin(data.user?.fullName || 'User', loginType);
+        // 🚨 4. THE TRAFFIC COP (Role-Based Routing) 🚨
+        const userRole = data.user?.role;
+        
+        if (userRole === 'ADMIN') {
+           // Admin is detected! Send them to the admin dashboard!
+           onLogin(data.user?.fullName || 'Super Admin', 'admin');
+        } else {
+           // Normal user or provider
+           onLogin(data.user?.fullName || 'User', loginType);
+        }
+
       } else {
         // ❌ ERROR
         setError(data.message || 'Login Failed');
@@ -213,6 +240,17 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
                   Continue with Google
                 </Button>
 
+                {/* 🆕 USER SIGN UP LINK */}
+                {loginType === 'user' && (
+                  <div className="mt-6 text-center">
+                    <p className="text-gray-600 mb-2">New to BhaktiSetu?</p>
+                    <button onClick={onUserSignup} className="text-[#FF9933] hover:underline font-medium">
+                      Create an Account →
+                    </button>
+                  </div>
+                )}
+
+                {/* PROVIDER SIGN UP LINK */}
                 {loginType === 'provider' && (
                   <div className="mt-6 text-center">
                     <p className="text-gray-600 mb-2">New service provider?</p>
@@ -297,19 +335,6 @@ export default function LoginSignup({ onLogin, onProviderSignup, onAdminAccess }
           ))}
         </div>
       </motion.div>
-
-      {onAdminAccess && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          onClick={onAdminAccess}
-          className="absolute bottom-24 right-6 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg border-2 border-[#FF9933]/30 hover:bg-[#FF9933]/10 transition-all z-20"
-          title="Admin Access"
-        >
-          <Shield className="w-5 h-5 text-[#FF9933]" />
-        </motion.button>
-      )}
     </div>
   );
 }
