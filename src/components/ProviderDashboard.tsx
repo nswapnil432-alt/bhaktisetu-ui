@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { data, useNavigate } from 'react-router-dom';
 import { 
   Calendar, Clock, MapPin, CheckCircle, XCircle, 
-  Settings, DollarSign, Star, Users as UsersIcon, Phone, MessageCircle, 
-  TrendingUp, BarChart2, ArrowLeft 
+  Settings, DollarSign, Star, Users as UsersIcon, Phone, MessageCircle, Edit2,
+  TrendingUp, BarChart2, ArrowLeft, 
+  User
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 
@@ -23,15 +24,13 @@ export default function ProviderDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'analytics'>('overview');
   
   const providerName = localStorage.getItem('userName') || 'Provider';
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   
-  // 🚀 Use the providerId we fixed in the backend yesterday!
-  // If it's missing, we fall back to userId just in case, but providerId is correct.
   const providerId = localStorage.getItem('providerId') || localStorage.getItem('userId');
 
-  // Start with a safe default so it doesn't look empty while loading
-  const [theme, setTheme] = useState({
+   const [theme, setTheme] = useState({
     name: 'Loading...',
-    color: '#FF9933', // Default Saffron
+    color: '#FF9933',  
     emoji: '⌛'
   });
 
@@ -43,36 +42,39 @@ export default function ProviderDashboard() {
     profileViews: 0
   });
 
-  useEffect(() => {
-    // If no ID is found, kick to login
-    if (!providerId || providerId === 'null') {
+useEffect(() => {
+     if (!providerId || providerId === 'null') {
        navigate('/login');
        return;
     }
 
     const fetchAllRealData = async () => {
       try {
-        // 1. Fetch the Provider Profile (This now contains the DB colors!)
-        const profileRes = await fetch(`http://localhost:3000/providers/${providerId}`);
+         const profileRes = await fetch(`http://localhost:3000/providers/${providerId}`);
         const profileData = await profileRes.json();
         
-        console.log("🚨 REAL PROFILE DATA:", profileData); // Check your console to see the DB data!
+        console.log("🚨 REAL PROFILE DATA:", profileData); 
 
         if (profileRes.ok) {
-           // 🧠 100% DYNAMIC: No more hardcoded dictionaries!
-           // We extract the exact color, emoji, and name stored in your PostgreSQL Database
-           const categoryData = profileData.category || {};
+            const categoryData = profileData.category || {};
 
            setTheme({
              name: categoryData.name || 'Service Provider', 
-             color: categoryData.color || '#FF9933',        // Pulls color directly from DB
-             emoji: categoryData.emoji || '🕉️'              // Pulls emoji directly from DB
+             color: categoryData.color || '#FF9933',        
+             emoji: categoryData.emoji || '🕉️'              
            });
+
+           // 🖼️ NEW: Grab the image from profileData!
+           if (profileData.profileImage) {
+              setProfileImage(profileData.profileImage);
+           }
         }
 
         // 2. Fetch ONLY this provider's Real Bookings
         const bookingsRes = await fetch(`http://localhost:3000/bookings/provider/${providerId}`);
         const bookingsData = await bookingsRes.json();
+        // (Note: I removed the duplicate 'await bookingsRes.json()' here that would have caused a crash!)
+        
         if (bookingsRes.ok && Array.isArray(bookingsData)) {
           setRequests(bookingsData);
         }
@@ -98,7 +100,6 @@ export default function ProviderDashboard() {
 
     fetchAllRealData();
   }, [providerId, navigate]);
-
   const handleUpdateStatus = async (bookingId: string, newStatus: string) => {
     if (newStatus === 'COMPLETED') {
       const confirm = window.confirm("Have you completed the Seva and received the remaining cash?");
@@ -135,19 +136,58 @@ export default function ProviderDashboard() {
         className="rounded-b-[2rem] p-5 pb-20 shadow-md relative z-40 transition-colors duration-500"
         style={{ background: `linear-gradient(135deg, ${theme.color}, ${theme.color}dd)` }} 
       >
-        <div className="flex justify-between items-center mb-6 pt-2">
-          <div className="flex items-center gap-3 text-white">
-             <button onClick={() => navigate(-1)} className="hover:opacity-80 transition-opacity"><ArrowLeft size={22}/></button>
-             <div>
-               <h1 className="text-[19px] font-bold leading-tight drop-shadow-sm">Provider Dashboard</h1>
-               <p className="text-white/90 text-[11px] mt-0.5 font-medium tracking-wide">Welcome back, {providerName}! 🙏</p>
-             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell /> 
-            <button onClick={() => { localStorage.clear(); navigate('/login'); }} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 hover:bg-white/30 transition-colors shadow-sm"><Settings size={18} className="text-white" /></button>
-          </div>
-        </div>
+       <div className="flex justify-between items-center mb-6 pt-2">
+  
+  {/* LEFT SIDE: Arrow, Picture Frame, and Text */}
+  <div className="flex items-center gap-3 text-white">
+     <button onClick={() => navigate(-1)} className="hover:opacity-80 transition-opacity">
+       <ArrowLeft size={22}/>
+     </button>
+
+     
+{/* 🖼️ THE PICTURE FRAME (BULLETPROOF INLINE STYLES) */}
+     <div style={{ 
+         width: '44px', 
+         height: '44px', 
+         borderRadius: '50%', 
+         overflow: 'hidden', 
+         flexShrink: 0, 
+         border: '2px solid rgba(255,255,255,0.5)',
+         backgroundColor: 'rgba(255,255,255,0.2)',
+         display: 'flex',
+         alignItems: 'center',
+         justifyContent: 'center'
+     }}>
+       
+       {profileImage ? ( 
+         <img 
+            src={profileImage} 
+            alt="Profile Avatar" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+         />
+       ) : (
+         <User size={20} color="white" />
+       )}
+       
+     </div>
+     {/* Your Existing Text */}
+     <div>
+       <h1 className="text-[19px] font-bold leading-tight drop-shadow-sm">Provider Dashboard</h1>
+       <p className="text-white/90 text-[11px] mt-0.5 font-medium tracking-wide">Welcome back, {providerName}! 🙏</p>
+     </div>
+  </div>
+
+  {/* RIGHT SIDE: Your Buttons */}
+  <div className="flex items-center gap-2">
+    <NotificationBell /> 
+    <button onClick={() => navigate('/edit-profile')} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 hover:bg-white/30 transition-colors shadow-sm" title="Edit Profile">
+      <Edit2 size={18} className="text-white" />
+    </button>
+    <button onClick={() => { localStorage.clear(); navigate('/login'); }} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 hover:bg-white/30 transition-colors shadow-sm" title="Logout">
+      <Settings size={18} className="text-white" />
+    </button>
+  </div>
+</div>
 
         <div className="rounded-2xl p-3 flex justify-between items-center shadow-md border border-white/20" style={{ backgroundColor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
            <div className="flex items-center gap-3">

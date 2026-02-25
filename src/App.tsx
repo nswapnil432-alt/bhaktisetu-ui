@@ -8,10 +8,10 @@ import OnboardingScreens from "./components/OnboardingScreens";
 import LoginSignup from "./components/LoginSignup";
 import ProviderSignup from "./components/ProviderSignup";
 import ProviderDashboard from "./components/ProviderDashboard";
-import HomeScreen from "./components/HomeScreen"; 
+import HomeScreen from "./components/HomeScreen";
 import CategoryListing from "./components/CategoryListing";
 import ProviderDetails from "./components/ProviderDetails";
-import EventPlanner from "./components/EventPlanner"; 
+import EventPlanner from "./components/EventPlanner";
 import BookingConfirmation from "./components/BookingConfirmation";
 import UserProfile from "./components/UserProfile";
 import AdminLogin from "./components/AdminLogin";
@@ -20,8 +20,9 @@ import PaymentScreen from "./components/PaymentScreen";
 import OnlinePaymentGateway from "./components/OnlinePaymentGateway";
 import MyBookings from "./components/MyBookings";
 import NotificationToast from "./components/NotificationToast"; // ✅ Imported
- 
-export type UserType = "user" | "provider";
+import EditProviderProfile from './components/EditProviderProfile'; // (Adjust the path if your folder is different)
+import UserSignup from "./components/UserSignup";
+export type UserType = "user" | "provider" | "admin";
 
 export interface ServiceProvider {
   id: string;
@@ -78,7 +79,7 @@ function App() {
       const timer = setTimeout(checkToken, 3000);
       return () => clearTimeout(timer);
     }
-  }, []); 
+  }, []);
 
   // 🚪 LOGOUT LOGIC
   const handleLogout = () => {
@@ -91,7 +92,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white relative"> {/* Added relative for positioning */}
-      
+
       {/* 🔔 GLOBAL NOTIFICATION TOAST */}
       {/* This sits outside Routes so it works on EVERY page */}
       <NotificationToast />
@@ -108,14 +109,16 @@ function App() {
         <Route path="/login" element={
           <LoginSignup
             onLogin={(name, type) => {
-              localStorage.setItem('userName', name);
-              localStorage.setItem('userType', type);
-              setUserName(name);
-              setUserType(type);
-              navigate(type === "provider" ? '/provider-dashboard' : '/home');
+              if (type === 'admin') {
+                navigate('/admin-dashboard');
+              } else if (type === 'provider') {
+                navigate('/provider-dashboard');
+              } else {
+                navigate('/home'); // Or wherever normal users go
+              }
             }}
             onProviderSignup={() => navigate('/provider-signup')}
-            onAdminAccess={() => navigate('/admin-login')}
+            onUserSignup={() => navigate('/user-signup')} // The new User Registration page we will build!
           />
         } />
 
@@ -160,7 +163,7 @@ function App() {
               setSelectedCategory(category);
               navigate('/category');
             }}
-            onPlanEvent={() => navigate('/plan-event')} 
+            onPlanEvent={() => navigate('/plan-event')}
             onProfileClick={() => navigate('/user-profile')}
             onNotificationsClick={() => navigate('/chat')}
           />
@@ -172,7 +175,7 @@ function App() {
             onBack={() => navigate('/home')}
             onProviderSelect={(provider) => {
               setSelectedProvider(provider);
-              navigate(`/provider/${provider.id}`); 
+              navigate(`/provider/${provider.id}`);
             }}
           />
         } />
@@ -188,7 +191,7 @@ function App() {
               }}
             />
           ) : (
-            <Navigate to="/home" /> 
+            <Navigate to="/home" />
           )
         } />
 
@@ -203,6 +206,11 @@ function App() {
           />
         } />
 
+        <Route path="/edit-profile" element={
+          <EditProviderProfile
+          />
+        } />
+
         {/* 7. Extras */}
         <Route path="/user-profile" element={
           <UserProfile
@@ -211,9 +219,10 @@ function App() {
           />
         } />
 
-        
+        <Route path="/user-signup" element={<UserSignup />} />
 
       </Routes>
+
     </div>
   );
 }
