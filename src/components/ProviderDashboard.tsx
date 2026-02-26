@@ -80,17 +80,17 @@ useEffect(() => {
         }
 
         // 3. Fetch Real Stats
-        const statsRes = await fetch(`http://localhost:3000/bookings/stats/${providerId}`);
-        const statsData = await statsRes.json();
-        if (statsRes.ok) {
-          setStats({
-            totalBookings: statsData.totalBookings || 0,
-            totalEarnings: statsData.totalEarnings || 0,
-            rating: statsData.rating || 0,
-            totalReviews: statsData.totalReviews || 0,
-            profileViews: statsData.profileViews || 156 
-          });
-        }
+        // const statsRes = await fetch(`http://localhost:3000/bookings/stats/${providerId}`);
+        // const statsData = await statsRes.json();
+        // if (statsRes.ok) {
+        //   setStats({
+        //     totalBookings: statsData.totalBookings || 0,
+        //     totalEarnings: statsData.totalEarnings || 0,
+        //     rating: statsData.rating || 0,
+        //     totalReviews: statsData.totalReviews || 0,
+        //     profileViews: statsData.profileViews || 156 
+        //   });
+        // }
       } catch (error) {
         console.error("Network Error fetching real data:", error);
       } finally {
