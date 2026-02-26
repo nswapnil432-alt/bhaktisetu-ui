@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, Save, User, MapPin, DollarSign, Clock, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import GalleryManager from './GalleryManager';
 
 export default function EditProviderProfile() {
   const navigate = useNavigate();
@@ -10,69 +11,73 @@ export default function EditProviderProfile() {
   const [saving, setSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  // Form State
+  
+  // 1. Form State
   const [formData, setFormData] = useState({
     fullName: '',
     basePrice: '',
     experience: '',
     address: '',
-    bio: ''
+    bio: '',
+    galleryImages: [] as string[], // Store images here
+    galleryVideos: [] as string[]   // Store videos here
   });
 
-  // 1. Fetch Existing Data on Load
-  useEffect(() => {
+  // 2. Fetch Function (Shared for initial load and updates)
+  const fetchProfile = async () => {
     if (!providerId) return;
+    try {
+      // Add timestamp to prevent the 304 Cache issue we saw!
+      const res = await fetch(`http://localhost:3000/providers/${providerId}?t=${Date.now()}`);
+      const data = await res.json();
 
-    const fetchProfile = async () => {
-      try {
-        const res = await fetch(`http://localhost:3000/providers/${providerId}`);
-        const data = await res.json();
+      if (res.ok) {
+        // Handle different data structures safely
+        const profileData = data.providerProfile || data || {};
         
-        if (res.ok) {
-          const profile = data.providerProfile || {};
-          setFormData({
-            fullName: data.user?.fullName || data.fullName || '',
-            basePrice: profile.basePrice?.toString() || '',
-            experience: profile.experience?.toString() || '',
-            address: data.address || profile.address || '',
-            bio: profile.bio || ''
-          });
-          
-          // 🖼️ THE ONLY FIX: Look in data.profileImage just like we did on the Dashboard!
-          setImagePreview(data.profileImage || profile.profileImage || null);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+        setFormData({
+          fullName: data.user?.fullName || data.fullName || '',
+          basePrice: profileData.basePrice?.toString() || '',
+          experience: profileData.experience?.toString() || '',
+          address: data.address || profileData.address || '',
+          bio: profileData.bio || '',
+          // ✅ FIX: Map the actual gallery data from the server
+          galleryImages: data.galleryImages || profileData.galleryImages || [],
+          galleryVideos: data.galleryVideos || profileData.galleryVideos || []
+        });
 
+        setImagePreview(data.profileImage || profileData.profileImage || null);
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProfile();
   }, [providerId]);
 
-  // 2. Handle Text Input Changes
+  // 3. Handlers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 3. Handle Image Selection & Preview
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      setImagePreview(URL.createObjectURL(file)); // Creates a temporary local URL to show the user
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
-  // 4. Save Data to Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      // Step A: Send the normal text data to your main window (/:id)
+      // Update Text Data
       const textRes = await fetch(`http://localhost:3000/providers/${providerId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -85,12 +90,10 @@ export default function EditProviderProfile() {
         })
       });
 
-      // Step B: If the user picked a photo, send it to your special photo window (/:id/photo)
+      // Update Profile Photo if selected
       if (selectedFile) {
         const imageData = new FormData();
-        // Notice we are calling it 'file' here, exactly as your backend requested!
-        imageData.append('file', selectedFile); 
-
+        imageData.append('file', selectedFile);
         await fetch(`http://localhost:3000/providers/${providerId}/photo`, {
           method: 'PATCH',
           body: imageData
@@ -99,13 +102,10 @@ export default function EditProviderProfile() {
 
       if (textRes.ok) {
         alert("Profile updated successfully! 🙏");
-        navigate('/provider-dashboard'); // Go back to dashboard
-      } else {
-        alert("Failed to update profile.");
+        navigate('/provider-dashboard');
       }
     } catch (error) {
-      console.error("Update error:", error);
-      alert("Network error.");
+      alert("Error saving profile.");
     } finally {
       setSaving(false);
     }
@@ -114,72 +114,67 @@ export default function EditProviderProfile() {
   if (loading) return <div className="text-center mt-20 text-gray-500 font-bold">Loading Profile...</div>;
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] font-sans pb-10">
-      {/* Header */}
+    <div className="min-h-screen bg-[#FDFBF7] pb-10">
       <div className="bg-[#FF9933] p-5 pt-8 text-white flex items-center gap-4 shadow-md rounded-b-3xl">
-        <button onClick={() => navigate(-1)} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition-all">
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-xl font-bold tracking-wide">Edit Profile</h1>
+        <button onClick={() => navigate(-1)} className="bg-white/20 p-2 rounded-full"><ArrowLeft size={20} /></button>
+        <h1 className="text-xl font-bold">Edit Profile</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="px-5 mt-6 space-y-6 max-w-md mx-auto">
-        
-        {/* Image Upload Section */}
+      <div className="px-5 mt-6 space-y-6 max-w-md mx-auto">
+        {/* Profile Image */}
         <div className="flex flex-col items-center bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
           <div className="relative w-28 h-28 rounded-full bg-gray-100 border-2 border-dashed border-[#FF9933] flex items-center justify-center overflow-hidden mb-3">
-            {imagePreview ? (
-              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-            ) : (
-              <User size={40} className="text-gray-300" />
-            )}
-            {/* Hidden File Input */}
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={handleImageChange} 
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
+            {imagePreview ? <img src={imagePreview} className="w-full h-full object-cover" alt="Profile" /> : <User size={40} className="text-gray-300" />}
+            <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />
           </div>
-          <p className="text-xs text-gray-500 font-medium flex items-center gap-1"><Upload size={14}/> Tap image to upload new photo</p>
+          <p className="text-xs text-gray-500 font-medium">Tap image to change</p>
         </div>
 
-        {/* Form Fields */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-          
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1 mb-1"><User size={14}/> Full Name</label>
-            <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF9933]" required />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1 mb-1"><DollarSign size={14}/> Base Cost (₹)</label>
-              <input type="number" name="basePrice" value={formData.basePrice} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF9933]" />
+              <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1 mb-1"><User size={14} /> Full Name</label>
+              <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm" required />
             </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1"><DollarSign size={14}/> Cost</label>
+                 <input type="number" name="basePrice" value={formData.basePrice} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+               </div>
+               <div>
+                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1"><Clock size={14}/> Yrs</label>
+                 <input type="number" name="experience" value={formData.experience} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+               </div>
+            </div>
+
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1 mb-1"><Clock size={14}/> Experience (Yrs)</label>
-              <input type="number" name="experience" value={formData.experience} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF9933]"  />
+              <label className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1"><MapPin size={14}/> Address</label>
+              <input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1"><FileText size={14}/> Bio</label>
+              <textarea name="bio" value={formData.bio} onChange={handleChange} rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none" />
             </div>
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1 mb-1"><MapPin size={14}/> Address / City</label>
-            <input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF9933]"/>
-          </div>
+          <button type="submit" disabled={saving} className="w-full bg-[#FF9933] text-white font-bold py-4 rounded-xl shadow-lg flex justify-center items-center gap-2">
+            {saving ? 'Saving...' : <><Save size={20} /> Save Profile Details</>}
+          </button>
+        </form>
 
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1 mb-1"><FileText size={14}/> Short Bio</label>
-            <textarea name="bio" value={formData.bio} onChange={handleChange} rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF9933] resize-none" placeholder="Tell devotees about your service..."></textarea>
-          </div>
+        {/* 📸 GALLERY MANAGER SECTION */}
+        <div className="mt-4">
+           <GalleryManager
+             providerId={providerId!}
+             existingImages={formData.galleryImages}
+             existingVideos={formData.galleryVideos}
+             onUpdate={fetchProfile} // 🔥 Updates state WITHOUT page reload!
+           />
         </div>
-
-        {/* Submit Button */}
-        <button type="submit" disabled={saving} className="w-full bg-[#FF9933] text-white font-bold text-lg py-4 rounded-xl shadow-lg hover:bg-[#E68A2E] active:scale-95 transition-all flex justify-center items-center gap-2">
-          {saving ? 'Saving updates...' : <><Save size={20} /> Save Profile</>}
-        </button>
-
-      </form>
+      </div>
     </div>
   );
 }

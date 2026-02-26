@@ -22,6 +22,7 @@ import MyBookings from "./components/MyBookings";
 import NotificationToast from "./components/NotificationToast"; // ✅ Imported
 import EditProviderProfile from './components/EditProviderProfile'; // (Adjust the path if your folder is different)
 import UserSignup from "./components/UserSignup";
+import GalleryTest from "./components/GalleryTest"; // The new test page for the gallery
 export type UserType = "user" | "provider" | "admin";
 
 export interface ServiceProvider {
@@ -219,6 +220,9 @@ function App() {
           />
         } />
 
+ <Route path="/test-gallery" element={
+          <GalleryTest />
+        } />
         <Route path="/user-signup" element={<UserSignup />} />
 
       </Routes>
