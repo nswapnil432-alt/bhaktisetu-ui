@@ -52,12 +52,12 @@ const fileInputRef = useRef<HTMLInputElement>(null);
             if (validFiles.length > 0) {
                 setSelectedFiles(prev => [...prev, ...validFiles]);
                 const newPreviews = validFiles.map(file => URL.createObjectURL(file));
-                setPreviews(prev => [...previews, ...newPreviews]);
+                setPreviews(prev => [...prev, ...newPreviews]);
             }
 
-            setSelectedFiles(prev => [...prev, ...validFiles]);
-            const newPreviews = validFiles.map(file => URL.createObjectURL(file));
-            setPreviews(prev => [...prev, ...newPreviews]);
+            // setSelectedFiles(prev => [...prev, ...validFiles]);
+            // const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+            // setPreviews(prev => [...prev, ...newPreviews]);
         }
     };
 
@@ -105,7 +105,7 @@ const fileInputRef = useRef<HTMLInputElement>(null);
         }
     };
 
-    const handleDelete = async (imageUrl: string) => {
+    const handleDeleteMedia = async (imageUrl: string) => {
         if (!window.confirm("Are you sure you want to delete this photo?")) return;
 
         try {
@@ -204,6 +204,13 @@ const fileInputRef = useRef<HTMLInputElement>(null);
       <div key={i} 
       onClick={() => setViewingMedia(url)}
       className="aspect-square rounded-xl overflow-hidden border">
+        {/* 🗑️ RED DELETE BUTTON (Only in Edit Mode) */}
+        <button 
+          onClick={() => handleDeleteMedia(url)}
+          className="absolute top-1 right-1 z-10 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-700 transition-colors"
+        >
+          <X size={10} />
+        </button>
         <img src={url} className="w-full h-full object-cover" alt="Gallery" />
       </div>
     ))
@@ -213,6 +220,13 @@ const fileInputRef = useRef<HTMLInputElement>(null);
       <div key={i}
       onClick={() => setViewingMedia(url)}
       className="aspect-square rounded-xl overflow-hidden border bg-black relative">
+       {/* 🗑️ RED DELETE BUTTON */}
+        <button 
+          onClick={() => handleDeleteMedia(url)}
+          className="absolute top-1 right-1 z-10 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-700 transition-colors"
+        >
+          <X size={12} />
+        </button>
         <video 
           src={url} 
           className="w-full h-full object-cover"
