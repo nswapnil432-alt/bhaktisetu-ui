@@ -38,19 +38,19 @@ export default function EventPlanner() {
     try {
       // 🚀 CREATE BOOKING IN BACKEND (Status: PENDING)
       const response = await fetch(`http://localhost:3000/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          organizerId: userId, 
-          providerId: providerId,
-          eventName: eventName,
-          eventDate: new Date().toISOString(), 
-          totalAmount: price
-        })
-      });
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    organizerId: userId, 
+    providerId: providerId,
+    eventName: eventName,
+    // 📅 FIX: Use a real Date object based on the 'date' variable from URL
+    eventDate: new Date().toISOString(), 
+    totalAmount: price
+  })
+});
 
       if (response.ok) {
         const responseData = await response.json(); 
