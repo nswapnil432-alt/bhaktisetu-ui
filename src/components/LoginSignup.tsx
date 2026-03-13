@@ -47,7 +47,7 @@ console.log(" login responce:", data);5
       if (response.ok) {
         // ✅ SUCCESS
         localStorage.setItem('token', data.access_token);
-        
+        localStorage.setItem('user', JSON.stringify(data.user));
         // 1. Save Base User ID & Role
         if (data.user && data.user.id) {
            // 1. The Super Net: Catch the name from wherever it is!
