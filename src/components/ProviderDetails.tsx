@@ -201,6 +201,11 @@ navigate(`/chat/${providerUserId}?bookingId=${currentProfileId}`);};
              <p className="text-[12px] text-gray-500 mb-0.5 font-medium">Starting from</p>
              <p className="text-[18px] font-bold text-gray-900">₹{basePrice.toLocaleString()}</p>
           </div>
+           {!isOwner && (
+          <Button onClick={() => setIsBookingModalOpen(true)} className="px-18 py-3 h-auto rounded-full font-bold text-white text-[15px] C] transition-all shadow-md active:scale-95" style={{ background: 'linear-gradient(135deg, #F97316, #EAB308)' }}>
+            Book Now
+          </Button>
+        )}
         </div>
       
 
