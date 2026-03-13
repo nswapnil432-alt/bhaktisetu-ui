@@ -23,6 +23,7 @@ import NotificationToast from "./components/NotificationToast"; // ✅ Imported
 import EditProviderProfile from './components/EditProviderProfile'; // (Adjust the path if your folder is different)
 import UserSignup from "./components/UserSignup";
 import GalleryTest from "./components/GalleryTest"; // The new test page for the gallery
+import ChatRoom from "./components/ChatRoom";
 export type UserType = "user" | "provider" | "admin";
 
 export interface ServiceProvider {
@@ -221,6 +222,8 @@ function App() {
           <GalleryTest />
         } />
         <Route path="/user-signup" element={<UserSignup />} />
+
+        <Route path="/chat/:conversationId" element={<ChatRoom/>} />
 
       </Routes>
 

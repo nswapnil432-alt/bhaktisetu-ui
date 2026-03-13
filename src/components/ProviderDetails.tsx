@@ -122,7 +122,7 @@ navigate(`/chat/${providerUserId}?bookingId=${currentProfileId}`);};
                     <button 
                       onClick={handleStartChat}
                       className="w-10 h-10 bg-[#FF9933] backdrop-blur-sm rounded-full flex items-center justify-center text-white shadow-lg border border-white/20 hover:bg-[#e68a2e] transition-all"
-                    >
+                     title="Chat with Maharaj">
                        <MessageCircle size={18} />
                     </button>
                   )}
