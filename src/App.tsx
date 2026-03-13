@@ -183,22 +183,19 @@ function App() {
         } />
 
         {/* 5. Provider Details & Booking */}
-        <Route path="/provider/:id" element={
-          selectedProvider ? (
-            <ProviderDetails
-              provider={selectedProvider}
-              onBack={() => navigate('/category')}
-              onBookNow={() => {
-                console.log("Opening Booking Modal...");
-              }}
-            />
-          ) : (
-            <Navigate to="/home" />
-          )
-        } />
-
-        <Route path="/plan-event" element={<EventPlanner />} />
-
+// App.tsx
+// 🛑 If you want your old UI back, go back to using the 'selectedProvider' state:
+<Route path="/provider/:id" element={
+  selectedProvider ? (
+    <ProviderDetails 
+      provider={selectedProvider} 
+      onBack={() => navigate('/category')} 
+    />
+  ) : (
+    <Navigate to="/home" />
+  )
+} />
+<Route path="/event-planner" element={<EventPlanner />} /> // ⬅️ Change this from /plan-event
         <Route path="/payment" element={<PaymentScreen />} />
         <Route path="/online-gateway" element={<OnlinePaymentGateway />} />
         <Route path="/my-bookings" element={<MyBookings />} />
