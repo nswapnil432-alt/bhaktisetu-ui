@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-
+import { useSearchParams } from 'react-router-dom';
 export default function GalleryTest() {
   const [images, setImages] = useState<string[]>([]);
-  const providerId = "75fac8b6-c8a5-4ee1-878b-e7c2da406ffe"; // Your ID from console
+  const [searchParams] = useSearchParams();
+  const providerId = searchParams.get('providerId'); // This gets it from the URL
 
   useEffect(() => {
     // 1. Fetch the data with a timestamp to kill the cache
@@ -12,7 +13,7 @@ export default function GalleryTest() {
         console.log("🔍 Test Page Data:", data.galleryImages);
         setImages(data.galleryImages || []);
       });
-  }, []);
+  }, [providerId]);
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#f0f0f0', minHeight: '100vh' }}>
