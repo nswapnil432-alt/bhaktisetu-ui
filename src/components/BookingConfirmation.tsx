@@ -35,15 +35,15 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
     category = "Devotional Service",
     date = "Date",
     time = "Time",
-    totalAmount = "5000",
-    paidAmount = 0,
+    totalAmount,
+    paidAmount,
     transactionId 
-  } = state;
+  } = location.state;
 
   // 4. CALCULATE BALANCE
-  const total = typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount || 0;
-  const paid = Number(paidAmount) || 0;
-  const balance = total - paid;
+  const total = Number(totalAmount) || 20000; // Fallback to 20k if lost
+const paid = Number(paidAmount) || 0;
+const balance = total - paid; // 🧮 20000 - 2011 = 17989
   
   // Determine Badge Status
   const isFullyPaid = balance <= 0;
@@ -96,8 +96,8 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
                  <h3 className="font-bold text-gray-900">{providerName}</h3>
                  <p className="text-xs text-orange-500 font-medium mb-1">{category}</p>
                  <div className="flex gap-3 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><Calendar size={12}/> {date}</span>
-                    <span className="flex items-center gap-1"><Clock size={12}/> {time}</span>
+                    <span className="flex items-center gap-1">📅 {date}</span>
+  <span className="flex items-center gap-1">🕒 {time}</span>
                  </div>
               </div>
            </div>
@@ -122,8 +122,7 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
               {/* Total */}
               <div className="flex justify-between text-sm">
                  <span className="text-gray-600">Total Seva Dakshina</span>
-                 <span className="font-bold text-gray-900">₹{total}</span>
-              </div>
+ <span className="font-bold text-gray-900">₹{total.toLocaleString()}</span>              </div>
 
               {/* Paid */}
               {paid > 0 && (
@@ -131,7 +130,7 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
                    <span className="text-gray-600 flex items-center gap-1 text-xs">
                       <CreditCard size={12} className="text-green-600"/> Paid Online
                    </span>
-                   <span className="font-bold text-green-600">- ₹{paid}</span>
+                 <span className="font-bold">- ₹{paid.toLocaleString()}</span>
                 </div>
               )}
 
@@ -142,10 +141,9 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
               <div className="flex justify-between items-center">
                  <div className="flex flex-col">
                     <span className="text-sm font-bold text-gray-800">To Pay at Venue</span>
-                    <span className="text-[10px] text-gray-400">Cash / Lifafa after event</span>
+                     <span className="text-[10px] text-gray-400">Cash / Lifafa after event</span>
                  </div>
-                 <span className="text-xl font-extrabold text-orange-600">₹{balance}</span>
-              </div>
+<span className="text-xl font-extrabold text-orange-600">₹{balance.toLocaleString()}</span>              </div>
            </div>
            
            {/* TXN ID */}

@@ -21,6 +21,9 @@ export default function BookingModal({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  // Inside BookingModal component
+const [month, setMonth] = useState<Date>(new Date()); // 🎯 State to track the visible month
 
   // 🕒 Time Slots
   const timeSlots = [
@@ -31,10 +34,13 @@ export default function BookingModal({
   const handleConfirm = () => {
     if (selectedDate && selectedTime) {
       setIsSubmitting(true);
+
+      const dateToSend = new Date(selectedDate);
+      dateToSend.setHours(12, 0, 0, 0)
       
       // Artificial delay for better UX
       setTimeout(() => {
-        onConfirm(selectedDate, selectedTime); // 🚀 Send to Parent
+        onConfirm(dateToSend, selectedTime); // 🚀 Send to Parent
         setIsSubmitting(false); 
       }, 500);
     }
@@ -81,21 +87,42 @@ export default function BookingModal({
           <div className="p-5 space-y-6 overflow-y-auto">
             {/* Calendar */}
             <div className="flex justify-center w-full">
-               <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                  className="rounded-xl border shadow-sm p-3" 
-                  classNames={{
-                    day_selected: "!bg-black !text-white hover:!bg-gray-800 rounded-full",
-                    day_today: "bg-gray-100 text-gray-900 font-bold rounded-full",
-                    day: "h-9 w-9 p-0 font-normal hover:bg-gray-100 rounded-full cursor-pointer",
-                    cell: "p-0 text-center text-sm relative [&:has([aria-selected])]:bg-transparent",
-                    head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-                    row: "flex w-full mt-2 justify-between gap-1",
-                  }}
-               />
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                // 🎯 Add these two lines to unlock the arrows
+                month={month}
+                onMonthChange={setMonth}
+
+                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                className="p-3 bg-white"
+                classNames={{
+                  // 🏷️ Header & Month Label
+                  caption: "flex justify-center pt-1 relative items-center mb-4",
+                  caption_label: "text-sm font-bold text-gray-900",
+
+                  // 🏹 The Navigation Arrows (THE CRITICAL FIX)
+                  nav: "space-x-1 flex items-center",
+                  nav_button: "h-7 w-7 bg-white border border-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-50 absolute top-0 z-20 transition-all",
+                  nav_button_previous: "left-1", // 👈 Moves "Back" arrow to the far left
+                  nav_button_next: "right-1",    // 👈 Moves "Next" arrow to the far right
+
+                  // 📅 The Grid Layout (No more squashing)
+                  table: "w-full border-collapse space-y-1",
+                  head_row: "flex justify-between mb-2",
+                  head_cell: "text-gray-400 w-9 font-medium text-[0.75rem] text-center",
+                  row: "flex w-full mt-2 justify-between",
+                  cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+
+                  // ✨ Selection & Hover Styling
+                  day: "h-9 w-9 p-0 font-normal hover:bg-orange-50 rounded-full transition-all flex items-center justify-center cursor-pointer",
+                  day_selected: "bg-orange-500 text-white font-bold hover:bg-orange-600 rounded-full",
+                  day_today: "bg-gray-100 text-orange-600 font-bold rounded-full",
+                  day_outside: "text-gray-200 opacity-30",
+                  day_disabled: "text-gray-200 opacity-30 cursor-not-allowed",
+                }}
+              />
             </div>
 
             {/* Time Slots */}

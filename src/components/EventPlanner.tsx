@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { ArrowLeft, Calendar, Clock, X, Tag } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from './ui/button';
+import { profile } from 'console';
 
 export default function EventPlanner() {
   const navigate = useNavigate(); 
-  const [searchParams] = useSearchParams();
+  const [ searchParams] = useSearchParams();
 
   // 1. Get Data Passed from URL
   const providerName = searchParams.get('name') || "Pandit Rajesh Sharma";
   const date = searchParams.get('date') || "27/01/2026";
   const time = searchParams.get('time') || "11:00 AM";
   const providerId = searchParams.get('providerId');
-  const price = 5000;
+  const category = searchParams.get('category');
+  const price = Number(searchParams.get('price'))||5000
 
   // 2. Form State
   const [eventName, setEventName] = useState("");
@@ -20,69 +22,64 @@ export default function EventPlanner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 3. The Final Booking Logic
-  const handleConfirmBooking = async () => {
-    const userId = localStorage.getItem('userId');
+ // Inside your EventPlanner.tsx
 
-    if (!userId) {
-      alert("Session expired. Please login again.");
-      navigate('/login');
-      return;
+const handleConfirmBooking = async () => {
+  const userId = localStorage.getItem('userId');
+
+  if (!userId || !eventName) {
+    alert("Please enter all details! 🙏");
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    // ✅ FIX 1: THE DATE BUG
+    // Instead of .toISOString(), we send the raw 'date' string to prevent UTC shifting
+    const cleanDate = new Date(date);
+    cleanDate.setHours(12, 0, 0, 0); // Set to noon so it stays on the same day in any timezone
+
+    // ✅ FIX 2: THE PRICE SYNC
+    // Ensure 'price' is converted to a Number. Sometimes '5000' is treated as a string.
+    const finalAmount = Number(price);
+
+    const response = await fetch(`http://localhost:3000/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        organizerId: userId, 
+        providerId: providerId,
+        eventName: eventName,
+        eventDate: cleanDate.toISOString(), // ✅ Sent as a clean object
+        totalAmount: finalAmount, // ✅ Sent as a clean number
+        location: "Pune" 
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      
+      navigate('/payment', {
+        state: {
+          bookingId: result.id, 
+          providerName: providerName,
+          totalAmount: finalAmount, // Passing the correct number
+          date: date,
+          time: time,
+          eventName: eventName
+        }
+      });
+    } else {
+      const err = await response.json();
+      alert(err.message || "Booking failed");
     }
-    if (!eventName) {
-      alert("Please enter an event name!"); 
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // 🚀 CREATE BOOKING IN BACKEND (Status: PENDING)
-      const response = await fetch(`http://localhost:3000/bookings`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    organizerId: userId, 
-    providerId: providerId,
-    eventName: eventName,
-    // 📅 FIX: Use a real Date object based on the 'date' variable from URL
-    eventDate: new Date().toISOString(), 
-    totalAmount: price
-  })
-});
-
-      if (response.ok) {
-        const responseData = await response.json(); 
-
-        // 🛑 WAS: navigate('/confirmation', ...);
-        
-        // ✅ NOW: GO TO PAYMENT SCREEN (To select Cash or Online)
-        navigate('/payment', {
-          state: {
-            // Pass the ID we just got from the backend
-            bookingId: responseData.bookingReference || responseData.id || "BKT" + Math.floor(1000 + Math.random() * 9000), 
-            providerName: providerName, 
-            totalAmount: price,
-            category: "Kirtankar",
-            date: date,
-            time: time,
-            eventName: eventName 
-          }
-        });
-
-      } else {
-        const errorData = await response.json();
-        alert(`Booking Failed: ${errorData.message || "Unknown error"}`);
-      }
-
-    } catch (error) {
-      console.error(error);
-      alert("Network error. Is the backend running?");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -94,11 +91,11 @@ export default function EventPlanner() {
           <button onClick={() => navigate(-1)} className="p-2 bg-white/20 rounded-full text-white hover:bg-white/30 backdrop-blur-sm">
             <ArrowLeft size={24} />
           </button>
-          <button className="text-white/80 text-sm font-medium hover:text-white">Clear All</button>
+          <button className="text-red/80 text-sm font-medium hover:text-white">Clear All</button>
         </div>
         <div className="mt-4 px-1">
-          <h1 className="text-2xl font-bold text-white">Plan Your Event</h1>
-          <p className="text-orange-100 text-sm mt-1">1 services selected</p>
+          <h1 className="text-2xl font-bold text-orange">Plan Your Event</h1>
+          {/* <p className="text-orange-100 text-sm mt-1"></p> */}
         </div>
       </div>
 
@@ -123,7 +120,7 @@ export default function EventPlanner() {
             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${providerName}`} alt="Provider" className="w-16 h-16 rounded-xl object-cover bg-orange-100" />
             <div>
               <h3 className="font-bold text-gray-900">{providerName}</h3>
-              <p className="text-xs text-gray-500 mb-2">Kirtankar</p>
+              <p className="text-xs text-gray-500 mb-2">{category}</p>
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <span className="flex items-center gap-1"><Calendar size={12} /> {date}</span>
                 <span className="flex items-center gap-1"><Clock size={12} /> {time}</span>
@@ -157,7 +154,7 @@ export default function EventPlanner() {
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Price Summary</h3>
           <div className="flex justify-between text-sm text-gray-500 mb-2">
-            <span>Subtotal (1 services)</span>
+            <span>Subtotal </span>
             <span>₹{price.toLocaleString()}</span>
           </div>
           <div className="border-t border-gray-100 my-2 pt-2 flex justify-between font-bold text-gray-900 text-base">
