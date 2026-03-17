@@ -74,10 +74,13 @@ navigate(`/chat/${providerUserId}?bookingId=${currentProfileId}`);};
   setIsBookingModalOpen(false);
 
   // 📅 Convert date to a simple string (YYYY-MM-DD)
+  const realPrice = provider?.providerProfile?.basePrice || 21000; 
+
   const dateStr = date.toISOString().split('T')[0];
 
   // 🚀 Use the EXACT path defined in your App.tsx
-  navigate(`/event-planner?providerId=${provider.id}&name=${encodeURIComponent(name)}&date=${dateStr}&time=${encodeURIComponent(time)}`);
+  // 🚀 Pass the REAL PRICE in the URL
+  navigate(`/event-planner?providerId=${provider.id}&name=${encodeURIComponent(name)}&date=${dateStr}&time=${time}&price=${realPrice}`);
 };
 
   // Media Delete remains for Owner

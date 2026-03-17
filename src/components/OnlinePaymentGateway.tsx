@@ -52,8 +52,8 @@ export default function OnlinePaymentGateway() {
     try {
       const paymentData = {
         bookingId: bookingId,           
-        amount: payAmount, // 👈 SEND THE EDITED AMOUNT 
-        method: activeTab.toUpperCase(),
+        amount: Number(payAmount), // 👈 SEND THE EDITED AMOUNT 
+        paymentMethod: activeTab.toUpperCase(),
         status: 'COMPLETED',            
         transactionId: "TXN" + Date.now()
       };
@@ -83,7 +83,10 @@ export default function OnlinePaymentGateway() {
         });
 
       } else {
-        alert("Payment Failed. Server Error.");
+       // 🎯 ADDITION: Get the actual error from the server to debug
+        const errorText = await response.text();
+        console.error("Server Error Response:", errorText);
+        alert(`Payment Failed: ${errorText || "Server Error"}`);
       }
     } catch (error) {
       console.error("Payment Error:", error);
