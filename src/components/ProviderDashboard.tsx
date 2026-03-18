@@ -9,9 +9,12 @@ import {
 import NotificationBell from './NotificationBell';
 
 interface BookingRequest {
+  organizer: any;
   id: string;
   eventName: string;
   eventDate: string;
+  eventTime: string;
+  eventLocation: string;
   totalAmount: number;
   paidAmount: number;
   status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
@@ -260,12 +263,12 @@ useEffect(() => {
             ) : requests.map((req) => (
                 <div key={req.id} className="bg-white rounded-[1.5rem] p-5 shadow-sm border-2" style={{ borderColor: `${theme.color}30` }}>
                   <div className="flex justify-between items-start mb-1"><h3 className="font-bold text-[16px] text-gray-900 leading-tight">{req.eventName}</h3>{getStatusBadge(req.status)}</div>
-                  <p className="text-[12px] text-gray-500 mb-4">Client Request</p> 
+                  <p className="text-[12px] text-gray-500 mb-4">{req.organizer?.fullName || "Guest User"}</p> 
                   
                   <div className="grid grid-cols-2 gap-y-3 mb-5">
                     <div className="flex items-center gap-2 text-[13px] text-gray-600"><Calendar size={14} className="text-gray-400"/><span className="font-medium">{new Date(req.eventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></div>
-                    <div className="flex items-center gap-2 text-[13px] text-gray-600"><Clock size={14} className="text-gray-400"/><span className="font-medium">10:00 AM</span></div>
-                    <div className="flex items-center gap-2 text-[13px] text-gray-600 col-span-2"><MapPin size={14} className="text-gray-400"/><span className="font-medium">Pune</span></div>
+                    <div className="flex items-center gap-2 text-[13px] text-gray-600"><Clock size={14} className="text-gray-400"/><span className="font-medium">{req.eventTime}</span></div>
+                    <div className="flex items-center gap-2 text-[13px] text-gray-600 col-span-2"><MapPin size={14} className="text-gray-400"/><span className="font-medium">{req.eventLocation}</span></div>
                   </div>
 
                   <div className="flex justify-between items-center pt-4 border-t border-gray-50 mb-1">

@@ -1,85 +1,89 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Calendar, Clock, X, Tag } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, X, Tag, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from './ui/button';
 import { profile } from 'console';
 
 export default function EventPlanner() {
-  const navigate = useNavigate(); 
-  const [ searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // 1. Get Data Passed from URL
   const providerName = searchParams.get('name') || "Pandit Rajesh Sharma";
   const date = searchParams.get('date') || "27/01/2026";
   const time = searchParams.get('time') || "11:00 AM";
+  const location = searchParams.get('eventLocation');
   const providerId = searchParams.get('providerId');
   const category = searchParams.get('category');
-  const price = Number(searchParams.get('price'))||5000
+  const price = Number(searchParams.get('price')) || 5000
 
   // 2. Form State
   const [eventName, setEventName] = useState("");
-  const [promoCode, setPromoCode] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 3. The Final Booking Logic
- // Inside your EventPlanner.tsx
+  // Inside your EventPlanner.tsx
 
-const handleConfirmBooking = async () => {
-  const userId = localStorage.getItem('userId');
+  const handleConfirmBooking = async () => {
+    const userId = localStorage.getItem('userId');
 
-  if (!userId || !eventName) {
-    alert("Please enter all details! 🙏");
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  try {
-    // ✅ FIX 1: THE DATE BUG
-    // Instead of .toISOString(), we send the raw 'date' string to prevent UTC shifting
-    const cleanDate = new Date(date);
-    cleanDate.setHours(12, 0, 0, 0); // Set to noon so it stays on the same day in any timezone
-
-    // ✅ FIX 2: THE PRICE SYNC
-    // Ensure 'price' is converted to a Number. Sometimes '5000' is treated as a string.
-    const finalAmount = Number(price);
-
-    const response = await fetch(`http://localhost:3000/bookings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        organizerId: userId, 
-        providerId: providerId,
-        eventName: eventName,
-        eventDate: cleanDate.toISOString(), // ✅ Sent as a clean object
-        totalAmount: finalAmount, // ✅ Sent as a clean number
-        location: "Pune" 
-      })
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      
-      navigate('/payment', {
-        state: {
-          bookingId: result.id, 
-          providerName: providerName,
-          totalAmount: finalAmount, // Passing the correct number
-          date: date,
-          time: time,
-          eventName: eventName
-        }
-      });
-    } else {
-      const err = await response.json();
-      alert(err.message || "Booking failed");
+    if (!userId || !eventName || !eventLocation) {
+      alert("Please enter all details! 🙏");
+      return;
     }
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+
+    setIsSubmitting(true);
+
+    try {
+      // ✅ FIX 1: THE DATE BUG
+      // Instead of .toISOString(), we send the raw 'date' string to prevent UTC shifting
+      const cleanDate = new Date(date);
+      cleanDate.setHours(12, 0, 0, 0); // Set to noon so it stays on the same day in any timezone
+
+      // ✅ FIX 2: THE PRICE SYNC
+      // Ensure 'price' is converted to a Number. Sometimes '5000' is treated as a string.
+      const finalAmount = Number(price);
+
+      const response = await fetch(`http://localhost:3000/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organizerId: userId,
+          providerId: providerId,
+          eventName: eventName,
+          eventLocation: eventLocation,
+          eventDate: cleanDate.toISOString(), // ✅ Sent as a clean object
+          eventTime: time,
+          totalAmount: finalAmount, // ✅ Sent as a clean number
+          
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+
+        navigate('/payment', {
+          state: {
+            bookingId: result.id,
+            providerName: providerName,
+            totalAmount: finalAmount, // Passing the correct number
+            date: date,
+            time: time,
+            eventName: eventName,
+            eventLocation: eventLocation
+          }
+        });
+      } else {
+        const err = await response.json();
+        alert(err.message || "Booking failed");
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -129,26 +133,23 @@ const handleConfirmBooking = async () => {
             </div>
           </div>
         </div>
-
-        {/* 🏷️ Promo Code */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-          <label className="text-sm font-semibold text-gray-700 mb-2 block">Promo Code</label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Tag className="absolute left-3 top-3 text-gray-400" size={16} />
-              <input
-                type="text"
-                placeholder="Enter promo code"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                className="w-full pl-9 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl p-2.5 outline-none"
-              />
-            </div>
-            <button className="text-orange-500 font-bold text-sm px-4 border border-orange-200 rounded-xl hover:bg-orange-50">
-              Apply
-            </button>
+        {/* 📍 NEW: Event Venue Section */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
+            Event Venue / Location
+          </label>
+          <div className="flex items-center gap-2 border-b-2 border-gray-100 pb-2 focus-within:border-orange-500 transition-all">
+            <MapPin size={18} className="text-gray-400" />
+            <input
+              type="text"
+              placeholder="e.g. Shaniwar Wada, Pune or Full Address"
+              value={eventLocation}
+              onChange={(e) => setEventLocation(e.target.value)}
+              className="flex-1 outline-none text-sm font-medium bg-transparent"
+            />
           </div>
         </div>
+        
 
         {/* 💰 Price Summary */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
