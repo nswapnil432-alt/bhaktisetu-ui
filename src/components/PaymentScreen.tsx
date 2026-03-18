@@ -8,7 +8,7 @@ export default function PaymentScreen() {
   const [processingMode, setProcessingMode] = useState<'cash' | 'online' | null>(null);
   const [searchParams] = useSearchParams();
   // Get Data passed from Event Planner
-  const { bookingId, providerName, totalAmount, date, time, category } = location.state || {};
+  const { bookingId, providerName, totalAmount, date, time, category , eventLocation} = location.state || {};
 const safeAmount = totalAmount || Number(searchParams.get('price')) || 0;  // 🥥 FLOW 1: CASH / DAKSHINA (Immediate Booking)
   const handleCashSelection = async () => {
     setProcessingMode('cash');
@@ -18,7 +18,8 @@ const safeAmount = totalAmount || Number(searchParams.get('price')) || 0;  // �
       navigate('/confirmation', {
         state: {
           bookingId, providerName, category, time: time,        // 🎯 Ensure this 'time' variable is passed!
-          date: date,        // 🎯 Ensure this 'date' variable is passed!totalAmount:safeAmount,
+          date: date, 
+          eventLocation: eventLocation,       // 🎯 Ensure this 'date' variable is passed!totalAmount:safeAmount,
           paymentStatus: 'PAY_AT_VENUE'
         }
       });
