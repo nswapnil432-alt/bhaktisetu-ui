@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Check, Calendar, Clock, CreditCard, AlertCircle, Share2, Home
+  Check, Calendar, Clock, CreditCard, AlertCircle, Share2, Home,
+  MessageCircle
 } from 'lucide-react';
+import * as htmlToImage from 'html-to-image';
 
 // 1. Define Props Interface (Fixes the App.tsx error)
 interface BookingConfirmationProps {
@@ -14,7 +16,8 @@ interface LocationState {
   bookingId?: string;
   providerName?: string;
   category?: string;
-  eventLocation?:string;
+  eventName?: string;
+  eventLocation?: string;
   date?: string;
   time?: string;
   totalAmount?: string | number;
@@ -27,7 +30,7 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
   const navigate = useNavigate();
   const location = useLocation();
 
-  console.log("locations",location)
+  console.log("locations", location)
   // 3. GET DATA with Type Safety
   const state = location.state as LocationState || {};
 
@@ -35,6 +38,7 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
     bookingId = "BKT" + Math.floor(100000 + Math.random() * 900000),
     providerName = "Provider Name",
     category = "Devotional Service",
+    eventName = state.eventName,
     date = "Date",
     time = "Time",
     eventLocation = state.eventLocation,
@@ -60,6 +64,53 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
     }
   };
 
+  const downloadPatrika = async () => {
+    const node = document.getElementById('patrika-template');
+    if (!node) return;
+
+    try {
+      // 🎯 1. FORCE VISIBILITY
+      node.style.display = 'block';
+
+      // 🎯 2. CAPTURE
+      const dataUrl = await htmlToImage.toPng(node, {
+        pixelRatio: 2,
+        backgroundColor: '#FFFBF0', // Force Cream Background
+        style: {
+          display: 'block', // Ensure it's captured as a block
+        }
+      });
+
+      // 🎯 3. DOWNLOAD
+      const link = document.createElement('a');
+      link.download = `BhaktiSetu_Invitation.png`;
+      link.href = dataUrl;
+      link.click();
+
+      // 🎯 4. HIDE
+      node.style.display = 'none';
+    } catch (err) {
+      console.error('Capture failed:', err);
+      node.style.display = 'none';
+    }
+  };
+  const shareOnWhatsApp = () => {
+    // 🎯 Use the variables we extracted from state
+    const nameOfEvent = eventName || "भक्ती कार्यक्रम";
+    const venue = eventLocation || "आमचे निवासस्थान";
+
+    const text = encodeURIComponent(
+      `🙏 *${nameOfEvent}* ॥ श्री गणेशाय नम: ॥\n\n` +
+      `आपणास कळविण्यास आनंद होत आहे की आम्ही *${nameOfEvent}* आयोजित केले आहे. तरी आपण सर्वांनी उपस्थित राहून दर्शनाचा लाभ घ्यावा.\n\n` +
+      `🚩 *महाराज:* ${providerName}\n` +
+      `📅 *तारीख:* ${date}\n` +
+      `🕒 *वेळ:* ${time}\n` +
+      `📍 *ठिकाण:* ${venue}\n\n` +
+      `*भक्तीसेतू (BhaktiSetu)* द्वारे निमंत्रण पाठवण्यात आले आहे. 🙏`
+    );
+
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
   return (
     <div className="min-h-screen bg-[#FFFBF0] flex flex-col items-center pb-10">
 
@@ -160,13 +211,26 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
 
         {/* 4. Action Buttons */}
         <div className="flex gap-3 pt-1">
+          {/* 1. Get Patrika Button */}
           <button
-            className="flex-1 py-3 rounded-xl border border-orange-200 text-orange-600 font-bold hover:bg-orange-50 text-sm flex items-center justify-center gap-2 bg-white shadow-sm">
-            <Share2 size={16} /> Share
+            onClick={downloadPatrika}
+            className="flex-1 py-3 rounded-xl border border-orange-200 text-orange-600 font-bold hover:bg-orange-50 text-sm flex items-center justify-center gap-2 bg-white shadow-sm"
+          >
+            <Share2 size={16} /> Get Patrika
           </button>
+
+          {/* 🎯 2. NEW: WhatsApp Share Button (The Green One) */}
+          <button
+            onClick={shareOnWhatsApp}
+            className="flex-1 py-3 rounded-xl bg-[#25D366] text-green font-bold shadow-md text-sm flex items-center justify-center gap-2 hover:bg-[#128C7E] transition-all"
+          >
+            <MessageCircle size={18} /> Share WA
+          </button>
+
+          {/* 3. Home Button */}
           <button
             onClick={handleHomeClick}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FF9933] to-[#FFD700] text-white font-bold shadow-md text-sm flex items-center justify-center gap-2 hover:shadow-lg"
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FF9933] to-[#FFD700] text-white font-bold shadow-md text-sm flex items-center justify-center gap-2"
           >
             <Home size={16} /> Home
           </button>
@@ -217,6 +281,53 @@ export default function BookingConfirmation({ onBackToHome }: BookingConfirmatio
         </div>
 
       </div>
+      {/* 🚩 TRADITIONAL KARYAKRAM PATRIKA (Hidden) */}
+      {/* 🚩 THE BULLETPROOF TEMPLATE */}
+      <div id="patrika-template" style={{
+        display: 'none',
+        width: '500px',
+        backgroundColor: '#FFFBF0',
+        padding: '40px',
+        border: '15px solid #FF9933',
+        textAlign: 'center',
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        zIndex: '-999'
+      }}>
+        {/* Header */}
+        <div style={{ color: '#E65100', fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>
+          ॥ श्री गणेशाय नम: ॥
+        </div>
+
+        <div style={{ color: '#D32F2F', fontSize: '20px', fontStyle: 'italic', marginBottom: '20px' }}>
+          "सप्रेम निमंत्रण"
+        </div>
+
+        {/* Content */}
+        <div style={{ backgroundColor: '#E65100', padding: '15px', borderRadius: '10px', marginBottom: '25px' }}>
+          <h1 style={{ color: '#FFFFFF', fontSize: '30px', margin: '0', fontWeight: 'bold', textTransform: 'uppercase' }}>
+            {eventName || "Bhakti Karyakram"}
+          </h1>
+        </div>
+
+        <div style={{ color: '#333333', fontSize: '22px', fontWeight: 'bold', marginBottom: '10px' }}>
+          Pandit: {providerName}
+        </div>
+
+        <div style={{ color: '#555555', fontSize: '18px', lineHeight: '1.8' }}>
+          <p style={{ margin: '5px 0' }}>📅 दिनांक: <strong>{date}</strong></p>
+          <p style={{ margin: '5px 0' }}>🕒 वेळ: <strong>{time}</strong></p>
+          <p style={{ margin: '5px 0' }}>📍 ठिकाण: <strong>{eventLocation}</strong></p>
+        </div>
+
+        {/* Branding */}
+        <div style={{ marginTop: '30px', borderTop: '2px solid #FFCC80', paddingTop: '20px' }}>
+          <p style={{ color: '#E65100', fontSize: '24px', fontWeight: '900', margin: '0' }}>BhaktiSetu</p>
+          <p style={{ color: '#999', fontSize: '10px', margin: '0' }}>DIGITAL INVITATION</p>
+        </div>
+      </div>
     </div>
+
   );
 }
