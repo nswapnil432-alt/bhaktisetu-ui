@@ -7,6 +7,7 @@ import {
   User
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 interface BookingRequest {
   organizer: any;
@@ -42,64 +43,73 @@ export default function ProviderDashboard() {
     totalEarnings: 0,
     rating: 0,
     totalReviews: 0,
-    profileViews: 0
+    profileViews: 0,
+    totalSevas: 0
   });
+  const [profileData, setProfileData] = useState<any>(null); // 🎯 Add this
+// For demo, we use this data. In real life, this comes from an API.
 
+const [graphData, setGraphData] = useState<any[]>([]);
 useEffect(() => {
+  
      if (!providerId || providerId === 'null') {
        navigate('/login');
        return;
     }
 
-    const fetchAllRealData = async () => {
-      try {
-         const profileRes = await fetch(`http://localhost:3000/providers/${providerId}`);
-        const profileData = await profileRes.json();
-        
-        console.log("🚨 REAL PROFILE DATA:", profileData); 
+   const fetchAllRealData = async () => {
+  try {
+    const profileRes = await fetch(`http://localhost:3000/providers/${providerId}`);
+    const result = await profileRes.json(); // 🎯 Call this 'result' to be safe
 
-        if (profileRes.ok) {
-            const categoryData = profileData.category || {};
+    if (profileRes.ok) {
+      setProfileData(result); // ✅ Save to state for the gallery
+      
+      // 🎯 CRITICAL FIX: Use 'result' here, not 'profileData'
+      const categoryData = result.category || {};
+      
+      console.log("🚨 CATEGORY DATA FOUND:", categoryData);
 
-           setTheme({
-             name: categoryData.name || 'Service Provider', 
-             color: categoryData.color || '#FF9933',        
-             emoji: categoryData.emoji || '🕉️'              
-           });
+      setTheme({
+        name: categoryData.name || 'Service Provider', 
+        color: categoryData.color || '#FF9933',        
+        emoji: categoryData.emoji || '🕉️'              
+      });
 
-           // 🖼️ NEW: Grab the image from profileData!
-           if (profileData.profileImage) {
-              setProfileImage(profileData.profileImage);
-           }
-        }
-
-        // 2. Fetch ONLY this provider's Real Bookings
-        const bookingsRes = await fetch(`http://localhost:3000/bookings/provider/${providerId}`);
-        const bookingsData = await bookingsRes.json();
-        // (Note: I removed the duplicate 'await bookingsRes.json()' here that would have caused a crash!)
-        
-        if (bookingsRes.ok && Array.isArray(bookingsData)) {
-          setRequests(bookingsData);
-        }
-
-        // 3. Fetch Real Stats
-        // const statsRes = await fetch(`http://localhost:3000/bookings/stats/${providerId}`);
-        // const statsData = await statsRes.json();
-        // if (statsRes.ok) {
-        //   setStats({
-        //     totalBookings: statsData.totalBookings || 0,
-        //     totalEarnings: statsData.totalEarnings || 0,
-        //     rating: statsData.rating || 0,
-        //     totalReviews: statsData.totalReviews || 0,
-        //     profileViews: statsData.profileViews || 156 
-        //   });
-        // }
-      } catch (error) {
-        console.error("Network Error fetching real data:", error);
-      } finally {
-        setLoading(false);
+      if (result.profileImage) {
+        setProfileImage(result.profileImage);
       }
-    };
+    }
+
+    // 2. Fetch Bookings
+    const bookingsRes = await fetch(`http://localhost:3000/bookings/provider/${providerId}`);
+    const bookingsData = await bookingsRes.json();
+    if (bookingsRes.ok && Array.isArray(bookingsData)) {
+      setRequests(bookingsData);
+    }
+
+    // 3. Fetch Stats
+    const statsRes = await fetch(`http://localhost:3000/bookings/stats/${providerId}`);
+    const statsData = await statsRes.json();
+    if (statsRes.ok) {
+      setStats({
+        totalBookings: statsData.totalBookings || 0,
+        totalEarnings: statsData.totalEarnings || 0,
+        rating: statsData.rating || 0,
+        totalReviews: statsData.totalReviews || 0,
+        profileViews: statsData.profileViews || 0,
+        totalSevas: statsData.totalSevas || 0 
+      });
+      const graphRes = await fetch(`http://localhost:3000/bookings/monthly-report/${providerId}`);
+const gData = await graphRes.json();
+if (graphRes.ok) setGraphData(gData);
+    }
+  } catch (error) {
+    console.error("Network Error fetching real data:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
     fetchAllRealData();
   }, [providerId, navigate]);
@@ -117,6 +127,11 @@ useEffect(() => {
       if (response.ok) {
         setRequests(prev => prev.map(req => req.id === bookingId ? { ...req, status: newStatus as any } : req));
       }
+      
+      const statsRes = await fetch(`http://localhost:3000/bookings/stats/${providerId}`);
+    const statsData = await statsRes.json();
+    if (statsRes.ok) setStats(statsData); 
+  
     } catch (error) {
       alert("Network error.");
     }
@@ -250,7 +265,30 @@ useEffect(() => {
                </div>
                <button className="w-full text-white text-sm font-bold py-3.5 rounded-xl shadow-md transition-opacity hover:opacity-90" style={{ background: `linear-gradient(to right, ${theme.color}, ${theme.color}dd)` }}>Complete Profile</button>
             </div>
+            {/* 📑 Inside your activeTab === 'overview' section */}
+{/* 📑 Inside the Overview Tab */}
+<div className="grid grid-cols-2 gap-3 p-4">
+  <h3 className="col-span-2 font-bold text-sm text-gray-700">Recent Seva Highlights 📸</h3>
+  
+  {profileData?.galleryImages?.map((imageUrl: string, index: number) => (
+    <div key={index} className="aspect-video rounded-xl overflow-hidden border shadow-sm">
+      <img 
+        src={imageUrl} 
+        className="w-full h-full object-cover" 
+        alt={`Seva ${index}`} 
+      />
+    </div>
+  ))}
+
+  {/* 🚩 Fallback if gallery is empty */}
+  {(!profileData?.galleryImages || profileData.galleryImages.length === 0) && (
+    <p className="col-span-2 text-center text-gray-400 text-xs py-10 border-2 border-dashed rounded-xl">
+      No Seva photos uploaded yet. 🙏
+    </p>
+  )}
+</div>
           </div>
+          
         )}
 
         {/* 📑 TAB 2: BOOKINGS */}
@@ -279,12 +317,40 @@ useEffect(() => {
                      </div>
                   </div>
 
-                  {req.status === 'PENDING' && (
-                    <div className="flex gap-3 mt-5">
-                      <button onClick={() => handleUpdateStatus(req.id, 'CONFIRMED')} className="flex-1 py-3 rounded-[12px] bg-[#00A859] text-white text-[13px] font-bold shadow-sm hover:bg-green-600 flex items-center justify-center gap-2"><CheckCircle size={16} /> Accept</button>
-                      <button onClick={() => handleUpdateStatus(req.id, 'REJECTED')} className="flex-1 py-3 rounded-[12px] border-2 border-red-100 text-red-500 text-[13px] font-bold bg-white hover:bg-red-50 flex items-center justify-center gap-2"><XCircle size={16} /> Decline</button>
-                    </div>
-                  )}
+                 {req.status === 'PENDING' && (
+  <div className="flex gap-3 mt-4">
+    <button 
+      onClick={() => handleUpdateStatus(req.id, 'CONFIRMED')} 
+      className="flex-1 py-3 rounded-xl bg-[#00A859] text-white text-[13px] font-bold shadow-md hover:bg-green-600 flex items-center justify-center gap-2"
+    >
+      <CheckCircle size={16} /> Accept
+    </button>
+    <button 
+      onClick={() => handleUpdateStatus(req.id, 'REJECTED')} 
+      className="flex-1 py-3 rounded-xl border-2 border-red-100 text-red-500 text-[13px] font-bold bg-white hover:bg-red-50 flex items-center justify-center gap-2"
+    >
+      <XCircle size={16} /> Decline
+    </button>
+  </div>
+)}
+
+{/* 🎯 ADD THE GOOGLE MAPS BUTTON HERE FOR CONFIRMED BOOKINGS */}
+{req.status === 'CONFIRMED' && (
+  <div className="mt-4 flex gap-2">
+    <button 
+      onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.eventLocation)}`, '_blank')}
+      className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-[13px] font-bold shadow-md flex items-center justify-center gap-2"
+    >
+      <MapPin size={16} /> Get Directions
+    </button>
+    <button 
+      onClick={() => handleUpdateStatus(req.id, 'COMPLETED')} 
+      className="flex-1 py-3 rounded-xl bg-gray-900 text-white text-[13px] font-bold shadow-md flex items-center justify-center gap-2"
+    >
+      <CheckCircle size={16} /> Finish Seva
+    </button>
+  </div>
+)}
 
                   {req.status === 'CONFIRMED' && (
                      <div className="mt-5">
@@ -298,16 +364,49 @@ useEffect(() => {
 
         {/* 📑 TAB 3: REAL ANALYTICS */}
         {activeTab === 'analytics' && (
-          <div className="space-y-5-x-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100">
-               <div className="space-y-5">
-                  <div>
-                     <div className="flex justify-between text-[13px] font-medium text-gray-700 mb-2"><span>Booking Conversion Rate</span><span className="font-bold text-gray-900">{stats.totalBookings > 0 ? '100%' : '0%'}</span></div>
-                     <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden"><div className="h-full rounded-full w-[100%]" style={{ backgroundColor: theme.color }}></div></div>
-                  </div>
-               </div>
-            </div>
-          </div>
+       <div className="p-4 bg-white rounded-3xl shadow-sm border border-gray-100 animate-in fade-in duration-500">
+    <div className="flex items-center gap-2 mb-6">
+       <div className="p-2 bg-green-50 rounded-lg"><TrendingUp size={16} className="text-green-600" /></div>
+       <h3 className="text-sm font-bold text-gray-800">Monthly Revenue</h3>
+    </div>
+    
+    {/* 📊 THE GRAPH CONTAINER (Fixed Height is Key!) */}
+    <div style={{ width: '100%', height: 220 }}>
+      <ResponsiveContainer>
+       <BarChart data={graphData}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+          <XAxis 
+            dataKey="month" 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{fontSize: 12, fill: '#999', fontWeight: 600}} 
+          />
+          <Tooltip 
+            cursor={{fill: '#FFF5E9'}}
+            contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+          />
+          <Bar 
+            dataKey="amount" 
+            fill={theme.color} 
+            radius={[6, 6, 0, 0]} 
+            barSize={35} 
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+    
+    {/* 💰 SUMMARY BOX */}
+    <div className="mt-6 p-4 bg-gray-50 rounded-2xl flex justify-between items-center border border-gray-100">
+      <div>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Estimated Next Month</p>
+        <p className="text-lg font-black text-gray-900">₹2,10,000+</p>
+      </div>
+      <div className="text-right">
+        <p className="text-[10px] font-bold text-green-600 uppercase">Growth</p>
+        <p className="text-sm font-bold text-green-600">+18%</p>
+      </div>
+    </div>
+  </div>
         )}
       </div>
     </div>
