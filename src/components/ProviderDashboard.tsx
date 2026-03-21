@@ -321,13 +321,13 @@ if (graphRes.ok) setGraphData(gData);
   <div className="flex gap-3 mt-4">
     <button 
       onClick={() => handleUpdateStatus(req.id, 'CONFIRMED')} 
-      className="flex-1 py-3 rounded-xl bg-[#00A859] text-white text-[13px] font-bold shadow-md hover:bg-green-600 flex items-center justify-center gap-2"
+      className="flex-1 py-3 rounded-xl bg-danger text-white text-[13px] font-bold shadow-md hover:bg-green-600 flex items-center justify-center gap-2"
     >
       <CheckCircle size={16} /> Accept
     </button>
     <button 
       onClick={() => handleUpdateStatus(req.id, 'REJECTED')} 
-      className="flex-1 py-3 rounded-xl border-2 border-red-100 text-red-500 text-[13px] font-bold bg-white hover:bg-red-50 flex items-center justify-center gap-2"
+      className="flex-1 py-3 rounded-xl border-2 border-red-100 text-red-500 text-[13px] font-bold bg-black hover:bg-red-50 flex items-center justify-center gap-2"
     >
       <XCircle size={16} /> Decline
     </button>
@@ -339,13 +339,13 @@ if (graphRes.ok) setGraphData(gData);
   <div className="mt-4 flex gap-2">
     <button 
       onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.eventLocation)}`, '_blank')}
-      className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-[13px] font-bold shadow-md flex items-center justify-center gap-2"
+      className="flex-1 py-3 rounded-xl bg-secondary text-black text-[13px] font-bold shadow-md flex items-center justify-center gap-2"
     >
       <MapPin size={16} /> Get Directions
     </button>
     <button 
       onClick={() => handleUpdateStatus(req.id, 'COMPLETED')} 
-      className="flex-1 py-3 rounded-xl bg-gray-900 text-white text-[13px] font-bold shadow-md flex items-center justify-center gap-2"
+      className="flex-1 py-3 rounded-xl bg-gray-900 text-pink text-[13px] font-bold shadow-md flex items-center justify-center gap-2"
     >
       <CheckCircle size={16} /> Finish Seva
     </button>
