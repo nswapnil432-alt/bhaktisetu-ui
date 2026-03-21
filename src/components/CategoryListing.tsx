@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, Star, MapPin, Calendar, Loader2 } from 'lucide-react';
+import { ArrowLeft, Star, MapPin, Calendar, Loader2, Search } from 'lucide-react';
 // import { Input } from './ui/input'; // Unused, removed for cleanliness
 
 interface CategoryListingProps {
@@ -114,6 +114,17 @@ export default function CategoryListing({ category, onBack, onProviderSelect }: 
           </div>
         </div>
 
+{/* 🔍 ADDED: CATEGORY SEARCH BAR */}
+        <div className="relative z-10 mb-6">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input 
+            type="text"
+            placeholder={`Search ${category}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white/95 shadow-inner border-none text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-white/50 outline-none transition-all"
+          />
+        </div>
         {/* Filter Chips */}
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {['All', 'Nearby', 'Top Rated', 'Available'].map((filter, i) => (

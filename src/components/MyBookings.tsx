@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Calendar, Clock, CheckCircle, XCircle, AlertCircle, Phone, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
+import { Star } from 'lucide-react'; // For the button icon
+import RateMaharajModal from './RateMaharajModal'; // The file we just fixed
 export default function MyBookings() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [showRateModal, setShowRateModal] = useState(false);
+const [selectedBooking, setSelectedBooking] = useState<any>(null);
   // 1. Get Logged In User ID
   const userId = localStorage.getItem('userId');
 
@@ -94,15 +96,25 @@ export default function MyBookings() {
 
                   {/* 🚀 DYNAMIC ACTION AREA FOR USER */}
                   
-                  {/* CASE 1: CONFIRMED */}
-                  {booking.status === 'CONFIRMED' && (
+                 {/* CASE 4: COMPLETED */}
+                  {booking.status === 'COMPLETED' && (
                     <div className="space-y-2">
-                        <div className="text-xs text-green-600 font-semibold flex items-center gap-1">
-                            <CheckCircle size={12} /> Request Accepted!
-                        </div>
-                        <button className="w-full bg-green-500 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm shadow-green-200 active:scale-95 transition-transform">
-                            <Phone size={14} /> Call Maharaj Ji
+                      <div className="w-full bg-blue-50 text-blue-600 text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 border border-blue-100">
+                        <CheckCircle size={14} /> Seva Completed 🙏
+                      </div>
+
+                      {/* 🎯 NEW: Rate Button - Only shows if not already reviewed */}
+                      {!booking.isReviewed && (
+                        <button
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setShowRateModal(true);
+                          }}
+                          className="w-full bg-white border-2 border-orange-200 text-orange-600 text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-orange-50 transition-colors"
+                        >
+                          <Star size={14} className="fill-orange-600" /> Rate Maharaj
                         </button>
+                      )}
                     </div>
                   )}
 
@@ -134,8 +146,48 @@ export default function MyBookings() {
 
                 </div>
               </div>
+              {/* 🚀 ADD THIS AT THE VERY BOTTOM (Before the last </div>) */}
+{showRateModal && selectedBooking && (
+  <RateMaharajModal 
+    providerName={selectedBooking.providerName}
+    onClose={() => setShowRateModal(false)}
+    onSave={async (rating, comment) => {
+const userId = localStorage.getItem('userId'); // 🎯 Get the ID      
+      try {
+        const response = await fetch('http://localhost:3000/reviews', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+             // 👈 Don't forget the token!
+          },
+          body: JSON.stringify({
+            bookingId: selectedBooking.id,
+            providerId: selectedBooking.providerId,
+           rating: Number(rating),   // ✅ Ensure it's a number
+      comment: comment,
+      reviewerId: userId,
+           
+          })
+        });
+
+        if (response.ok) {
+          alert("Review submitted! Dhanyawad! 🙏");
+          setShowRateModal(false);
+          fetchBookings(); // 🔄 Refresh the list to hide the button
+        } else {
+          const errorData = await response.json();
+          alert(`Error: ${errorData.message}`);
+        }
+      } catch (error) {
+        console.error("Submission error:", error);
+        alert("Server connection failed. Please try again.");
+      }
+    }}
+  />
+)}
             </div>
           ))
+          
         )}
       </div>
     </div>
