@@ -3,7 +3,6 @@ import { X, Calendar as CalendarIcon, Clock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
 import { Calendar } from './ui/calendar';
-
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;

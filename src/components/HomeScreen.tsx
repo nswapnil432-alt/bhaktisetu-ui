@@ -4,7 +4,7 @@ import { Search, User, Sparkles, Loader2, ImageOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import NotificationBell from './NotificationBell';
-
+import { uiLabels } from '../utils/langStore';
 interface HomeScreenProps {
   userName: string;
   onCategorySelect: (category: string) => void;

@@ -24,6 +24,7 @@ import EditProviderProfile from './components/EditProviderProfile'; // (Adjust t
 import UserSignup from "./components/UserSignup";
 import GalleryTest from "./components/GalleryTest"; // The new test page for the gallery
 import ChatRoom from "./components/ChatRoom";
+import { loadLanguageLabels } from './utils/langStore';
 export type UserType = "user" | "provider" | "admin";
 
 export interface ServiceProvider {
@@ -82,6 +83,10 @@ function App() {
       return () => clearTimeout(timer);
     }
   }, []);
+  useEffect(() => {
+  const currentLang = localStorage.getItem('user_lang') || 'en';
+  loadLanguageLabels(currentLang); // 🚩 Load the buttons once at startup
+}, []);
 
   // 🚪 LOGOUT LOGIC
   const handleLogout = () => {

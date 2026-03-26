@@ -5,8 +5,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
-
-// 1. Define Props Interface (Fixes the App.tsx error)
+ // 1. Define Props Interface (Fixes the App.tsx error)
 interface BookingConfirmationProps {
   onBackToHome?: () => void; // Optional: If passed from App.tsx, we use it
 }

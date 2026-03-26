@@ -4,7 +4,7 @@ import { Phone, Lock, User, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-
+import { myFetch } from '../api/apiClient';
 export default function UserSignup() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -30,7 +30,7 @@ export default function UserSignup() {
 
     try {
       // Sending data to your backend to create a user
-      const response = await fetch('http://localhost:3000/users/signup', {
+      const response = await myFetch('http://localhost:3000/users/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
