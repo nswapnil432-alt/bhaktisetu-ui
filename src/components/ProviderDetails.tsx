@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Phone, MessageCircle, Star, MapPin, 
   Clock, Calendar, Video, Image as ImageIcon, Play, X, Share2
@@ -7,6 +7,8 @@ import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom'; 
 import BookingModal from './BookingModal'; 
 import { motion } from 'framer-motion';
+import { myFetch } from '../api/apiClient';
+import { uiLabels } from '../utils/langStore';
 
 interface ProviderDetailsProps {
   provider: any; 
@@ -35,7 +37,7 @@ const [provider, setProvider] = useState(initialProvider);
   
   const defaultImage = "https://images.unsplash.com/photo-1588501131105-006fc4eb4a94?q=80&w=1000&auto=format&fit=crop";
   const heroImage = (profile.profileImage && profile.profileImage.length > 5) ? profile.profileImage : defaultImage;
-
+const hasRecordedView = useRef(false);
   useEffect(() => {
     const fetchFreshProviderData = async () => {
       try {
@@ -57,7 +59,34 @@ const [provider, setProvider] = useState(initialProvider);
     };
 
     fetchFreshProviderData();
+   
   }, [initialProvider.id]);
+  // 2️⃣ EFFECT: Record View Count (Only Once)
+useEffect(() => {
+  const recordView = async () => {
+    // 🛡️ THE LOCK: If we already recorded, STOP HERE.
+    if (hasRecordedView.current) return;
+
+    if (initialProvider.id && !isOwner) {
+      try {
+        hasRecordedView.current = true; // 🔐 Set the lock to TRUE immediately
+        
+        await fetch(`http://localhost:3000/providers/${initialProvider.id}/view`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        console.log("🚩 Seva View Recorded ONLY ONCE (Guaranteed)!");
+      } catch (error) {
+        hasRecordedView.current = false; // Unlock if it failed
+        console.log("View count update failed", error);
+      }
+    }
+  };
+
+  recordView();
+}, [initialProvider.id, isOwner]);
 
   const handleStartChat = () => {
     if (isOwner) return;
@@ -221,7 +250,7 @@ const [provider, setProvider] = useState(initialProvider);
         </div>
         {!isOwner && (
           <Button onClick={() => setIsBookingModalOpen(true)} className="px-12 py-3 h-auto rounded-full font-bold text-white text-[15px] transition-all shadow-md active:scale-95" style={{ background: 'linear-gradient(135deg, #F97316, #EAB308)' }}>
-             Book Now
+            {uiLabels['Book Now'] || 'Book Now'}
           </Button>
         )}
       </div>

@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-
+import { myFetch } from '../api/apiClient';
 interface ProviderSignupProps {
   onSignupComplete: (user: any) => void;
   onBack: () => void;
@@ -32,7 +32,7 @@ export default function ProviderSignup({ onSignupComplete, onBack }: ProviderSig
 
   // 🔄 1. FETCH CATEGORIES
   useEffect(() => {
-    fetch('http://localhost:3000/users/categories')
+    myFetch('http://localhost:3000/users/categories')
       .then(res => res.json())
       .then(data => setCategories(data))
       .catch(err => console.error("Failed to load categories", err));
@@ -53,7 +53,7 @@ export default function ProviderSignup({ onSignupComplete, onBack }: ProviderSig
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/users/signup', {
+      const response = await myFetch('http://localhost:3000/users/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
