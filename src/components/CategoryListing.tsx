@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Star, MapPin, Calendar, Loader2, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 // import { Input } from './ui/input'; // Unused, removed for cleanliness
 
 interface CategoryListingProps {
@@ -17,7 +18,7 @@ export default function CategoryListing({ category, onBack, onProviderSelect }: 
   // 🎨 Theme State
   const [themeColor, setThemeColor] = useState('#FF9933');
   const [categoryEmoji, setCategoryEmoji] = useState('🕉️');
-
+const { t } = useTranslation();
   useEffect(() => {
     setIsLoading(true);
 
@@ -127,7 +128,7 @@ export default function CategoryListing({ category, onBack, onProviderSelect }: 
         </div>
         {/* Filter Chips */}
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {['All', 'Nearby', 'Top Rated', 'Available'].map((filter, i) => (
+          {[t('All'), t('Nearby'), t('Top Rated'), t('Available')].map((filter, i) => (
             <button
               key={filter}
               className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${i === 0 ? 'bg-white text-gray-800 shadow-md' : 'bg-white/20 text-white hover:bg-white/30'}`}

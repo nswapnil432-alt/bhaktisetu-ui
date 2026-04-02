@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { X, Calendar as CalendarIcon, Clock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
 import { Calendar } from './ui/calendar';
+import { useTranslation } from 'react-i18next';
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,7 +30,7 @@ const [month, setMonth] = useState<Date>(new Date()); // 🎯 State to track the
     "09:00 AM", "11:00 AM", "02:00 PM",
     "04:00 PM", "06:00 PM", "08:00 PM", "10:00 PM"
   ];
-
+const {t} = useTranslation();
   const handleConfirm = () => {
     if (selectedDate && selectedTime) {
       setIsSubmitting(true);
@@ -75,7 +76,7 @@ const [month, setMonth] = useState<Date>(new Date()); // 🎯 State to track the
             <div>
               <h2 className="text-lg font-bold text-gray-900">Book {providerName}</h2>
               <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                 <CalendarIcon size={12} /> Select availability
+                 <CalendarIcon size={12} /> {t('Select availability')}
               </p>
             </div>
             <button onClick={onClose} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500">
@@ -127,7 +128,7 @@ const [month, setMonth] = useState<Date>(new Date()); // 🎯 State to track the
             {/* Time Slots */}
             <div>
               <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <Clock size={16} className="text-gray-400"/> Available Slots
+                <Clock size={16} className="text-gray-400"/> {t('Select Time Slot')}
               </h3>
               <div className="grid grid-cols-3 gap-2">
                 {timeSlots.map((time) => (

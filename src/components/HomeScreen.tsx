@@ -4,7 +4,10 @@ import { Search, User, Sparkles, Loader2, ImageOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import NotificationBell from './NotificationBell';
+import { useTranslation } from 'react-i18next';
+
 import { uiLabels } from '../utils/langStore';
+import LanguageDropdown from './LanguageSelector';
 interface HomeScreenProps {
   userName: string;
   onCategorySelect: (category: string) => void;
@@ -19,7 +22,8 @@ export default function HomeScreen({
   onPlanEvent,
   onProfileClick,
 }: HomeScreenProps) { // Removed onNotificationsClick from props since the Bell handles it now
-  
+    const { t } = useTranslation();
+
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -56,10 +60,11 @@ export default function HomeScreen({
           
           {/* Action Buttons Section */}
           <div className="flex items-center gap-4"> {/* Increased gap for better spacing */}
-            
+              <LanguageDropdown />
             {/* 🔔 The Clean Notification Bell */}
             {/* Removed the extra <button> wrapper and the Hello User text */}
             <div className="text-white"> 
+              
                {/* Wrapped in a div with text-white so the Bell icon inherits the color if needed, 
                    though we styled the Bell icon as gray-700 inside its own component. 
                    If you want it white, update the Bell icon color inside NotificationBell.tsx */}
@@ -100,7 +105,7 @@ export default function HomeScreen({
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-white mb-1 font-bold">Plan Your Event</h3>
+              <h3 className="text-white mb-1 font-bold">{t('plan your event')}</h3>
               <p className="text-white/90">Book multiple services together</p>
             </div>
             <Sparkles className="text-white" size={32} />
@@ -108,8 +113,8 @@ export default function HomeScreen({
         </motion.div>
 
         <div className="mb-4">
-          <h3 className="text-gray-800 font-bold text-lg">Browse Services</h3>
-          <p className="text-gray-500 text-sm">Find the perfect match for your devotional event</p>
+          <h3 className="text-gray-800 font-bold text-lg">{t('Browse Services')}</h3>
+          <p className="text-gray-500 text-sm">{t('Find the perfect match for your devotional event')}</p>
         </div>
 
         {/* 🎨 CATEGORIES GRID */}
@@ -170,7 +175,7 @@ export default function HomeScreen({
                         className="w-2 h-2 rounded-full"
                         style={{ backgroundColor: safeColor }}
                       ></div>
-                      <span className="text-gray-600 text-xs font-bold">Available</span>
+                      <span className="text-gray-600 text-xs font-bold">{t('Available')}</span>
                     </div>
                   </div>
                 </motion.button>
@@ -186,7 +191,7 @@ export default function HomeScreen({
           transition={{ delay: 0.4 }}
           className="mt-8"
         >
-          <h3 className="text-gray-800 font-bold text-lg mb-4">Featured This Week</h3>
+          <h3 className="text-gray-800 font-bold text-lg mb-4">{t('Featured This Week')}</h3>
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <img
               src="https://images.unsplash.com/photo-1680505303171-992ef799db43?w=1080&q=80"

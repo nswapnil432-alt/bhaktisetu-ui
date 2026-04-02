@@ -3,11 +3,12 @@ import { ArrowLeft, Calendar, Clock, X, Tag, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from './ui/button';
 import { profile } from 'console';
+import { useTranslation } from 'react-i18next';
 
 export default function EventPlanner() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
+const {t} = useTranslation();
   // 1. Get Data Passed from URL
   const providerName = searchParams.get('name') || "Pandit Rajesh Sharma";
   const date = searchParams.get('date') || "27/01/2026";
@@ -95,10 +96,15 @@ export default function EventPlanner() {
           <button onClick={() => navigate(-1)} className="p-2 bg-white/20 rounded-full text-white hover:bg-white/30 backdrop-blur-sm">
             <ArrowLeft size={24} />
           </button>
-          <button className="text-red/80 text-sm font-medium hover:text-white">Clear All</button>
+          <button className="text-red/80 text-sm font-medium hover:text-white" onClick={() => {
+            setEventName('');
+            setEventLocation('');
+          }}>
+            {t('Clear All')}
+          </button>
         </div>
         <div className="mt-4 px-1">
-          <h1 className="text-2xl font-bold text-orange">Plan Your Event</h1>
+          <h1 className="text-2xl font-bold text-orange">{t('Plan Your Event')}</h1>
           {/* <p className="text-orange-100 text-sm mt-1"></p> */}
         </div>
       </div>
@@ -107,10 +113,10 @@ export default function EventPlanner() {
 
         {/* 📝 Event Details Input */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-          <label className="text-sm font-semibold text-gray-700 mb-2 block">Event Details</label>
+          <label className="text-sm font-semibold text-gray-700 mb-2 block">{t('Event Name')}</label>
           <input
             type="text"
-            placeholder="Enter event name (e.g., Krishna Janmashtami Kirtan)"
+            placeholder={t('Event Name')}
             value={eventName}
             onChange={(e) => setEventName(e.target.value)}
             className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl p-3 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
@@ -136,7 +142,7 @@ export default function EventPlanner() {
         {/* 📍 NEW: Event Venue Section */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
           <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
-            Event Venue / Location
+            {t('Event Location')}
           </label>
           <div className="flex items-center gap-2 border-b-2 border-gray-100 pb-2 focus-within:border-orange-500 transition-all">
             <MapPin size={18} className="text-gray-400" />
@@ -153,13 +159,13 @@ export default function EventPlanner() {
 
         {/* 💰 Price Summary */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Price Summary</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('Price Summary')}</h3>
           <div className="flex justify-between text-sm text-gray-500 mb-2">
-            <span>Subtotal </span>
-            <span>₹{price.toLocaleString()}</span>
+            <span>{t('Subtotal')}</span>
+            <span>₹{(price.toLocaleString())}</span>
           </div>
           <div className="border-t border-gray-100 my-2 pt-2 flex justify-between font-bold text-gray-900 text-base">
-            <span>Total Amount</span>
+            <span>{t('Total Amount')}</span>
             <span className="text-orange-500">₹{price.toLocaleString()}</span>
           </div>
         </div>
@@ -169,7 +175,7 @@ export default function EventPlanner() {
       {/* 🟡 Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 px-6 flex justify-between items-center z-50">
         <div>
-          <p className="text-xs text-gray-500">Total Amount</p>
+          <p className="text-xs text-gray-500">{t('Total Amount')}</p>
           <h2 className="text-xl font-bold text-gray-900">₹{price.toLocaleString()}</h2>
         </div>
         <Button
@@ -177,7 +183,7 @@ export default function EventPlanner() {
           disabled={isSubmitting}
           className="bg-[#FCD34D] text-black font-bold px-8 py-6 rounded-xl hover:bg-[#fbbf24] shadow-lg shadow-orange-100"
         >
-          {isSubmitting ? "Processing..." : "Confirm My Bhakti Event"}
+          {isSubmitting ? "Processing..." : t('Confirm My Event')}
         </Button>
       </div>
 
