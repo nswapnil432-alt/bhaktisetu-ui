@@ -5,13 +5,14 @@ import {
   Loader2, Wallet, Edit2 
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { useTranslation } from 'react-i18next';
 
 export default function OnlinePaymentGateway() {
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'upi' | 'card' | 'netbanking'>('upi');
-
+const {t} = useTranslation(); 
   // Get data passed from previous screen
   const { bookingId, providerName, totalAmount, date, time, category } = location.state || {};
   
@@ -106,7 +107,7 @@ export default function OnlinePaymentGateway() {
                <ArrowLeft size={20} className="text-gray-600" />
             </button>
             <div>
-               <h1 className="text-lg font-bold text-gray-800 leading-none">Secure Payment</h1>
+               <h1 className="text-lg font-bold text-gray-800 leading-none">{t('Secure Payment')}</h1>
                <div className="flex items-center gap-1 text-green-600 text-xs font-bold mt-1">
                   <Lock size={10} /> 128-bit SSL Encrypted
                </div>
@@ -121,14 +122,14 @@ export default function OnlinePaymentGateway() {
          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 mb-6 transition-all">
             <div className="flex justify-between items-start mb-4">
                <div>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Paying To</p>
+                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">{t('Paying To')}</p>
                   <h2 className="text-lg font-bold text-gray-900">{providerName || "Service Provider"}</h2>
                   <p className="text-xs text-orange-600 font-medium">{category}</p>
                </div>
                
                {/* 🟢 EDITABLE AMOUNT SECTION */}
                <div className="text-right">
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Amount to Pay</p>
+                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">{t('Amount to Pay')}</p>
                   
                   <div className="flex items-center justify-end gap-2">
                     <span className="text-2xl font-extrabold text-gray-900">₹</span>
@@ -144,14 +145,14 @@ export default function OnlinePaymentGateway() {
                   {/* Balance Indicator */}
                   {balanceAmount > 0 && (
                     <p className="text-xs text-red-500 font-bold mt-1 bg-red-50 px-2 py-1 rounded-md inline-block">
-                      Balance: ₹{balanceAmount} (Pay at Venue)
+                      Balance: ₹{balanceAmount} ({t('Pay at Venue')})
                     </p>
                   )}
                </div>
             </div>
 
             <div className="border-t border-dashed border-gray-200 pt-3 flex justify-between text-xs text-gray-500">
-               <span>Total Bill: ₹{originalTotal}</span>
+               <span>{t('Total Bill')}: ₹{originalTotal}</span>
                <span>{date} • {time}</span>
             </div>
          </div>
@@ -165,19 +166,19 @@ export default function OnlinePaymentGateway() {
                   onClick={() => setActiveTab('upi')}
                   className={`flex-1 py-4 text-sm font-bold flex flex-col items-center gap-1 transition-all ${activeTab === 'upi' ? 'bg-white text-orange-600 border-t-2 border-t-orange-500' : 'text-gray-500 hover:bg-gray-100'}`}
                >
-                  <Smartphone size={20} /> UPI
+                  <Smartphone size={20} />{t('UPI')}
                </button>
                <button 
                   onClick={() => setActiveTab('card')}
                   className={`flex-1 py-4 text-sm font-bold flex flex-col items-center gap-1 transition-all ${activeTab === 'card' ? 'bg-white text-blue-600 border-t-2 border-t-blue-500' : 'text-gray-500 hover:bg-gray-100'}`}
                >
-                  <CreditCard size={20} /> Card
+                  <CreditCard size={20} /> {t('Card')}
                </button>
                <button 
                   onClick={() => setActiveTab('netbanking')}
                   className={`flex-1 py-4 text-sm font-bold flex flex-col items-center gap-1 transition-all ${activeTab === 'netbanking' ? 'bg-white text-purple-600 border-t-2 border-t-purple-500' : 'text-gray-500 hover:bg-gray-100'}`}
                >
-                  <Landmark size={20} /> NetBanking
+                  <Landmark size={20} /> {t('NetBanking')}
                </button>
             </div>
 
@@ -187,20 +188,20 @@ export default function OnlinePaymentGateway() {
                {/* 🟢 UPI CONTENT */}
                {activeTab === 'upi' && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                     <p className="text-sm text-gray-600 font-medium">Select a UPI App to pay:</p>
+                     <p className="text-sm text-gray-600 font-medium">{t('Select a UPI App to pay:')}</p>
                      
                      <div className="grid grid-cols-2 gap-4">
                         <button onClick={handlePayNow} className="p-3 border rounded-xl flex items-center justify-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all">
-                           <span className="font-bold text-gray-700">GPay</span>
+                           <span className="font-bold text-gray-700">{t('GPay')}</span>
                         </button>
                         <button onClick={handlePayNow} className="p-3 border rounded-xl flex items-center justify-center gap-2 hover:border-purple-500 hover:bg-purple-50 transition-all">
-                           <span className="font-bold text-gray-700">PhonePe</span>
+                           <span className="font-bold text-gray-700">{t('PhonePe')}</span>
                         </button>
                      </div>
 
                      <div className="relative">
                         <div className="absolute inset-0 flex items-center"><span className="w-full border-t"></span></div>
-                        <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">Or enter UPI ID</span></div>
+                        <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">{t('Or enter UPI ID')}</span></div>
                      </div>
 
                      <div>
@@ -278,7 +279,7 @@ export default function OnlinePaymentGateway() {
                {/* 🟣 NETBANKING CONTENT */}
                {activeTab === 'netbanking' && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                     <p className="text-sm text-gray-600 font-medium">Popular Banks</p>
+                     <p className="text-sm text-gray-600 font-medium">{t('Popular Banks')}</p>
                      <div className="grid grid-cols-3 gap-3">
                         {['HDFC', 'SBI', 'ICICI', 'Axis', 'Kotak', 'More'].map((bank) => (
                            <button 
@@ -311,8 +312,8 @@ export default function OnlinePaymentGateway() {
       {loading && (
          <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
             <Loader2 className="w-12 h-12 text-orange-500 animate-spin mb-4" />
-            <h2 className="text-xl font-bold text-gray-900">Processing Payment</h2>
-            <p className="text-gray-500 text-sm mt-2">Do not close this window...</p>
+            <h2 className="text-xl font-bold text-gray-900">{t('Processing Payment')}</h2>
+            <p className="text-gray-500 text-sm mt-2">{t('Do not close this window...')}</p>
          </div>
       )}
 

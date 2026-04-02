@@ -25,6 +25,7 @@ import UserSignup from "./components/UserSignup";
 import GalleryTest from "./components/GalleryTest"; // The new test page for the gallery
 import ChatRoom from "./components/ChatRoom";
 import { loadLanguageLabels } from './utils/langStore';
+import ServiceProviderProfile from "./components/ServiceProviderProfile";
 export type UserType = "user" | "provider" | "admin";
 
 export interface ServiceProvider {
@@ -231,6 +232,7 @@ function App() {
         <Route path="/chat/:conversationId" element={<ChatRoom/>} />
 
       </Routes>
+     
 
     </div>
   );

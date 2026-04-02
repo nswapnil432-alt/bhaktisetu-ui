@@ -9,6 +9,8 @@ import BookingModal from './BookingModal';
 import { motion } from 'framer-motion';
 import { myFetch } from '../api/apiClient';
 import { uiLabels } from '../utils/langStore';
+import { useTranslation } from 'react-i18next';
+import LanguageDropdown from './LanguageSelector';
 
 interface ProviderDetailsProps {
   provider: any; 
@@ -33,7 +35,7 @@ const [provider, setProvider] = useState(initialProvider);
   
   const galleryImages = profile.galleryImages || []; 
   const galleryVideos = profile.galleryVideos || [];
-  
+  const {t} = useTranslation();
   
   const defaultImage = "https://images.unsplash.com/photo-1588501131105-006fc4eb4a94?q=80&w=1000&auto=format&fit=crop";
   const heroImage = (profile.profileImage && profile.profileImage.length > 5) ? profile.profileImage : defaultImage;
@@ -130,6 +132,7 @@ useEffect(() => {
         <div className="absolute top-0 left-0 right-0 p-4 pt-6 flex justify-between items-center z-20">
           <button onClick={onBack} className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/20"><ArrowLeft size={20} /></button>
           <div className="flex gap-3">
+              <LanguageDropdown />
             <button onClick={handleShare} className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg"><Share2 size={18} /></button>
             <button className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white"><Phone size={18} /></button>
             {!isOwner && <button onClick={handleStartChat} className="w-10 h-10 bg-[#FF9933] rounded-full flex items-center justify-center text-white shadow-lg"><MessageCircle size={18} /></button>}
@@ -150,7 +153,7 @@ useEffect(() => {
       {/* 🟠 MAIN CONTENT */}
       <div className="px-5 py-6 space-y-7">
         <div>
-          <h3 className="text-[16px] font-bold text-gray-800 mb-2">About</h3>
+          <h3 className="text-[16px] font-bold text-gray-800 mb-2">{t('About')}</h3>
           <p className="text-gray-600 text-[14px] leading-relaxed">{bio}</p>
         </div>
 
@@ -200,10 +203,10 @@ useEffect(() => {
         <div className="mt-8">
           <div className="flex justify-between items-end mb-4">
             <div>
-              <h3 className="text-[16px] font-bold text-gray-800">Bhaktas Feedback</h3>
-              <p className="text-[11px] text-gray-400">Real experiences from recent Sevas</p>
+              <h3 className="text-[16px] font-bold text-gray-800">{t('Reviews')}</h3>
+              <p className="text-[11px] text-gray-400">{t('(Real experiences from recent Sevas)')}</p>
             </div>
-            <span className="text-orange-600 font-bold text-xs">View All</span>
+            <span className="text-orange-600 font-bold text-xs">{t('View All')}</span>
           </div>
 
           <div className="space-y-4">
@@ -245,12 +248,12 @@ useEffect(() => {
       {/* 💳 STICKY BOTTOM BAR */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 py-4 z-50 flex items-center justify-between pb-6">
         <div>
-           <p className="text-[12px] text-gray-500 mb-0.5 font-medium">Starting from</p>
+           <p className="text-[12px] text-gray-500 mb-0.5 font-medium">{t('Starting From')}</p>
            <p className="text-[18px] font-bold text-gray-900">₹{basePrice.toLocaleString()}</p>
         </div>
         {!isOwner && (
           <Button onClick={() => setIsBookingModalOpen(true)} className="px-12 py-3 h-auto rounded-full font-bold text-white text-[15px] transition-all shadow-md active:scale-95" style={{ background: 'linear-gradient(135deg, #F97316, #EAB308)' }}>
-            {uiLabels['Book Now'] || 'Book Now'}
+            {t('Book Now')}
           </Button>
         )}
       </div>

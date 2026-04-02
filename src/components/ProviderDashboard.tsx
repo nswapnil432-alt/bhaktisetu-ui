@@ -8,7 +8,10 @@ import {
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-
+import { useTranslation } from 'react-i18next';
+import LanguageDropdown from './LanguageSelector';
+import i18n from '../i18n';
+// adjust path if needed  
 interface BookingRequest {
   organizer: any;
   id: string;
@@ -22,6 +25,7 @@ interface BookingRequest {
 }
 
 export default function ProviderDashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [requests, setRequests] = useState<BookingRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,7 +114,7 @@ export default function ProviderDashboard() {
         setLoading(false);
       }
     };
-
+  
     fetchAllRealData();
   }, [providerId, navigate]);
   const handleUpdateStatus = async (bookingId: string, newStatus: string) => {
@@ -156,8 +160,7 @@ export default function ProviderDashboard() {
 
   return (
     <div className="max-w-[440px] mx-auto min-h-screen bg-[#FDFBF7] shadow-2xl relative font-sans border-x border-gray-100">
-
-      {/* 🎨 DYNAMIC HEADER */}
+    {/* 🎨 DYNAMIC HEADER */}
       <div
         className="rounded-b-[2rem] p-5 pb-20 shadow-md relative z-40 transition-colors duration-500"
         style={{ background: `linear-gradient(135deg, ${theme.color}, ${theme.color}dd)` }}
@@ -198,14 +201,16 @@ export default function ProviderDashboard() {
             </div>
             {/* Your Existing Text */}
             <div>
-              <h1 className="text-[19px] font-bold leading-tight drop-shadow-sm">Provider Dashboard</h1>
-              <p className="text-white/90 text-[11px] mt-0.5 font-medium tracking-wide">Welcome back, {providerName}! 🙏</p>
+              <h1 className="text-[19px] font-bold leading-tight drop-shadow-sm">{t('provider_dashboard')}</h1>
+              <p className="text-white/90 text-[11px] mt-0.5 font-medium tracking-wide">{t('welcome_back')}, {providerName}! 🙏</p>
             </div>
           </div>
 
           {/* RIGHT SIDE: Your Buttons */}
           <div className="flex items-center gap-2">
+            <LanguageDropdown />
             <NotificationBell />
+            {/* <LanguageSelector /> 👈 Place the switcher here */}
             <button onClick={() => navigate('/edit-profile')} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 hover:bg-white/30 transition-colors shadow-sm" title="Edit Profile">
               <Edit2 size={18} className="text-white" />
             </button>
@@ -221,7 +226,7 @@ export default function ProviderDashboard() {
               {theme.emoji}
             </div>
             <div>
-              <p className="text-white/90 text-[10px] font-bold uppercase tracking-wider">Service Category</p>
+              <p className="text-white/90 text-[10px] font-bold uppercase tracking-wider">{t('service_category')}</p>
               {/* Real Category Name from Database */}
               <h3 className="text-white font-bold text-[15px] leading-tight drop-shadow-sm">{theme.name}</h3>
             </div>
@@ -235,31 +240,31 @@ export default function ProviderDashboard() {
         {/* 📊 REAL STATS FROM DATABASE */}
         <div className="grid grid-cols-2 gap-4 mb-5 mt-2">
           <div className="bg-white p-4 rounded-[1.2rem] shadow-sm border border-gray-100 flex flex-col justify-between h-[104px]">
-            <div className="flex items-center gap-2 text-gray-600 text-[13px] font-medium"><div className="p-3 rounded-full" style={{ backgroundColor: `${theme.color}15` }}><Calendar size={14} style={{ color: theme.color }} /></div>Bookings</div>
+            <div className="flex items-center gap-2 text-gray-600 text-[13px] font-medium"><div className="p-3 rounded-full" style={{ backgroundColor: `${theme.color}15` }}><Calendar size={14} style={{ color: theme.color }} /></div>{t('bookings')}</div>
             <h2 className="text-[22px] font-bold text-gray-900">{stats.totalBookings}</h2>
           </div>
           <div className="bg-white p-4 rounded-[1.2rem] shadow-sm border border-gray-100 flex flex-col justify-between h-[104px]">
-            <div className="flex items-center gap-2 text-gray-600 text-[13px] font-medium"><div className="p-1 rounded-full" style={{ backgroundColor: `${theme.color}15` }}><DollarSign size={14} style={{ color: theme.color }} /></div>Earnings</div>
+            <div className="flex items-center gap-2 text-gray-600 text-[13px] font-medium"><div className="p-1 rounded-full" style={{ backgroundColor: `${theme.color}15` }}><DollarSign size={14} style={{ color: theme.color }} /></div>{t('earnings')}</div>
             <h2 className="text-[22px] font-bold text-gray-900">₹{stats.totalEarnings.toLocaleString()}</h2>
           </div>
           <div className="bg-white p-4 rounded-[1.2rem] shadow-sm border border-gray-100 flex flex-col justify-between h-[104px]">
-            <div className="flex items-center gap-2 text-gray-600 text-[13px] font-medium"><div className="p-1 rounded-full bg-[#FFF4E5]"><Star size={14} className="text-[#F59E0B]" /></div>Rating</div>
+            <div className="flex items-center gap-2 text-gray-600 text-[13px] font-medium"><div className="p-1 rounded-full bg-[#FFF4E5]"><Star size={14} className="text-[#F59E0B]" /></div>{t('rating')}</div>
             <div className="flex items-baseline gap-2">
               <h2 className="text-[22px] font-bold text-gray-900">{stats.rating ? stats.rating.toFixed(1) : '0.0'}</h2>
               <span className="text-[10px] text-gray-400">({stats.totalReviews})</span>
             </div>
           </div>
           <div className="bg-[#F4F7FF] p-4 rounded-[1.2rem] shadow-sm border border-[#E0E7FF] flex flex-col justify-between h-[104px]">
-            <div className="flex items-center gap-2 text-[#3B82F6] text-[13px] font-medium"><div className="p-1 rounded-full bg-blue-100"><UsersIcon size={14} className="text-[#3B82F6]" /></div>Profile Views</div>
+            <div className="flex items-center gap-2 text-[#3B82F6] text-[13px] font-medium"><div className="p-1 rounded-full bg-blue-100"><UsersIcon size={14} className="text-[#3B82F6]" /></div>{t('profile_views')}</div>
             <h2 className="text-[22px] font-bold text-gray-900">{stats.profileViews}</h2>
           </div>
         </div>
 
         {/* Dynamic Tabs */}
         <div className="w-full grid grid-cols-3 mb-6 bg-white shadow-lg">
-          <button onClick={() => setActiveTab('overview')} className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all ${activeTab === 'overview' ? 'text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`} style={{ background: activeTab === 'overview' ? `linear-gradient(to right, ${theme.color}, ${theme.color}dd)` : 'transparent' }}>Overview</button>
-          <button onClick={() => setActiveTab('bookings')} className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all ${activeTab === 'bookings' ? 'text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`} style={{ background: activeTab === 'bookings' ? `linear-gradient(to right, ${theme.color}, ${theme.color}dd)` : 'transparent' }}>Bookings</button>
-          <button onClick={() => setActiveTab('analytics')} className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all ${activeTab === 'analytics' ? 'text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`} style={{ background: activeTab === 'analytics' ? `linear-gradient(to right, ${theme.color}, ${theme.color}dd)` : 'transparent' }}>Analytics</button>
+          <button onClick={() => setActiveTab('overview')} className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all ${activeTab === 'overview' ? 'text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`} style={{ background: activeTab === 'overview' ? `linear-gradient(to right, ${theme.color}, ${theme.color}dd)` : 'transparent' }}>{t('overview')}</button>
+          <button onClick={() => setActiveTab('bookings')} className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all ${activeTab === 'bookings' ? 'text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`} style={{ background: activeTab === 'bookings' ? `linear-gradient(to right, ${theme.color}, ${theme.color}dd)` : 'transparent' }}>{t('bookings')}</button>
+          <button onClick={() => setActiveTab('analytics')} className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all ${activeTab === 'analytics' ? 'text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`} style={{ background: activeTab === 'analytics' ? `linear-gradient(to right, ${theme.color}, ${theme.color}dd)` : 'transparent' }}>{t('analytics')}</button>
         </div>
 
         {/* 📑 TAB 1: OVERVIEW */}
@@ -276,7 +281,7 @@ export default function ProviderDashboard() {
             {/* 📑 Inside your activeTab === 'overview' section */}
             {/* 📑 Inside the Overview Tab */}
             <div className="grid grid-cols-2 gap-3 p-4">
-              <h3 className="col-span-2 font-bold text-sm text-gray-700">Recent Seva Highlights 📸</h3>
+              <h3 className="col-span-2 font-bold text-sm text-gray-700">{t('recent seva highlights')} 📸</h3>
 
               {profileData?.galleryImages?.map((imageUrl: string, index: number) => (
                 <div key={index} className="aspect-video rounded-xl overflow-hidden border shadow-sm">
@@ -304,7 +309,7 @@ export default function ProviderDashboard() {
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-300">
             {loading ? <p className="text-center text-gray-400 py-10">Loading requests...</p> : requests.length === 0 ? (
               <div className="text-center py-10 bg-white rounded-[1.5rem] border border-dashed border-gray-200">
-                <p className="text-gray-500">No bookings available.</p>
+                <p className="text-gray-500">{t('no bookings available')}</p>
               </div>
             ) : requests.map((req) => (
               <div key={req.id} className="bg-white rounded-[1.5rem] p-5 shadow-sm border-2" style={{ borderColor: `${theme.color}30` }}>

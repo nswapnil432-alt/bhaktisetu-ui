@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Banknote, ChevronRight, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function PaymentScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const [processingMode, setProcessingMode] = useState<'cash' | 'online' | null>(null);
   const [searchParams] = useSearchParams();
+  const {t} = useTranslation();
   // Get Data passed from Event Planner
   const { bookingId, providerName, totalAmount, date, time, category , eventLocation} = location.state || {};
 const safeAmount = totalAmount || Number(searchParams.get('price')) || 0;  // ðŸ¥¥ FLOW 1: CASH / DAKSHINA (Immediate Booking)
@@ -54,19 +56,19 @@ const safeAmount = totalAmount || Number(searchParams.get('price')) || 0;  // ðŸ
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
           <ArrowLeft size={20} className="text-gray-700" />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">Payment Method</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('Payment Method')}</h1>
       </div>
 
       <div className="p-6 max-w-md mx-auto space-y-6">
 
         {/* Amount Summary */}
         <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
-          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Total Payable</p>
+          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{t('Total Payable')}</p>
           <h2 className="text-4xl font-extrabold text-gray-900 mt-2">â‚¹{safeAmount}</h2>
         </div>
 
         <div className="space-y-4">
-          <p className="text-sm font-bold text-gray-500 ml-1">Select an option to proceed:</p>
+          <p className="text-sm font-bold text-gray-500 ml-1">{t('Select an option to proceed:')}</p>
 
           {/* ðŸ¥¥ OPTION 1: CASH (Direct Action) */}
           <button
@@ -79,8 +81,8 @@ const safeAmount = totalAmount || Number(searchParams.get('price')) || 0;  // ðŸ
                 {processingMode === 'cash' ? <Loader2 className="animate-spin" /> : <Banknote size={24} />}
               </div>
               <div className="flex-1">
-                <h4 className="font-bold text-gray-900 text-lg">Pay Cash / Dakshina</h4>
-                <p className="text-xs text-gray-500 mt-1">Pay after event completion</p>
+                <h4 className="font-bold text-gray-900 text-lg">{t('Pay Cash / Dakshina')}</h4>
+                <p className="text-xs text-gray-500 mt-1">{t('Pay after event completion')}</p>
               </div>
               <ChevronRight className="text-gray-300 group-hover:text-orange-500" />
             </div>
@@ -97,8 +99,8 @@ const safeAmount = totalAmount || Number(searchParams.get('price')) || 0;  // ðŸ
                 {processingMode === 'online' ? <Loader2 className="animate-spin" /> : <CreditCard size={24} />}
               </div>
               <div className="flex-1">
-                <h4 className="font-bold text-gray-900 text-lg">Pay Online Now</h4>
-                <p className="text-xs text-gray-500 mt-1">UPI, Card, Netbanking</p>
+                <h4 className="font-bold text-gray-900 text-lg">{t('Pay Online Now')}</h4>
+                <p className="text-xs text-gray-500 mt-1">{t('UPI, Card, Netbanking')}</p>
               </div>
               <ChevronRight className="text-gray-300 group-hover:text-blue-500" />
             </div>
@@ -110,7 +112,7 @@ const safeAmount = totalAmount || Number(searchParams.get('price')) || 0;  // ðŸ
       {/* Footer Note */}
       <div className="fixed bottom-6 left-0 right-0 text-center px-6">
         <p className="text-xs text-gray-400">
-          By proceeding, you agree to the booking terms & conditions.
+         {t(' By proceeding, you agree to the booking terms & conditions.')}
         </p>
       </div>
 

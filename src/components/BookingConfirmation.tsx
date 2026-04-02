@@ -5,6 +5,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
+import { useTranslation } from 'react-i18next';
  // 1. Define Props Interface (Fixes the App.tsx error)
 interface BookingConfirmationProps {
   onBackToHome?: () => void; // Optional: If passed from App.tsx, we use it
@@ -28,7 +29,7 @@ interface LocationState {
 export default function BookingConfirmation({ onBackToHome }: BookingConfirmationProps) {
   const navigate = useNavigate();
   const location = useLocation();
-
+const {t} = useTranslation();
   console.log("locations", location)
   // 3. GET DATA with Type Safety
   const state = location.state as LocationState || {};
